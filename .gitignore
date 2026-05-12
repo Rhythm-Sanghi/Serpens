@@ -34,5 +34,6 @@ Thumbs.db
 desktop.ini
 
 # Secrets
+/keystore
 .env
 .env*.local
