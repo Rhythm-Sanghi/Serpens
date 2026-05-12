@@ -59,15 +59,16 @@ export class Renderer {
     grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
     grad.addColorStop(0.5, 'rgba(60, 0, 120, 0.6)');
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    const r = Math.max(0, center);
     ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(center, center, center, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(center, center, r, 0, Math.PI * 2); ctx.fill();
   }
 
   public triggerGlitch(): void { this.glitchTime = 15; }
   public triggerTurnWobble(): void { this.turnWobble = 1.0; }
   public triggerScreenShake(): void { this.shakeTime = 10; }
   public triggerResumeFlash(): void { this.resumeFlashTime = 10; }
-  public setTransitionProgress(p: number): void { this.transitionProgress = p; }
+  public setTransitionProgress(p: number): void { this.transitionProgress = Math.min(1, Math.max(0, p)); }
 
   private getHue(score: number): number { return (this.baseHue + score * 0.5) % 360; }
 
@@ -219,8 +220,9 @@ export class Renderer {
     if (this.resumeFlashTime > 0) {
       const head = state.snake[0];
       this.ctx.fillStyle = `rgba(255, 255, 255, ${this.resumeFlashTime / 10})`;
+      const r = Math.max(0, this.cellSize * 2);
       this.ctx.beginPath(); 
-      this.ctx.arc(head.x * this.cellSize + this.cellSize / 2, head.y * this.cellSize + this.cellSize / 2, this.cellSize * 2, 0, Math.PI * 2); 
+      this.ctx.arc(head.x * this.cellSize + this.cellSize / 2, head.y * this.cellSize + this.cellSize / 2, r, 0, Math.PI * 2); 
       this.ctx.fill();
       this.resumeFlashTime--;
     }
@@ -323,14 +325,14 @@ export class Renderer {
     const cy = canvas.height / 2;
     // MINIMALIST_VOID: Solid circle + thin Teal ring
     ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.arc(cx, cy, 10 * this.cellSize, 0, Math.PI * 2);
+    const r = Math.max(0, 10 * this.cellSize);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = this.accentColor;
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 10 * this.cellSize, 0, Math.PI * 2);
+    const r = Math.max(0, 10 * this.cellSize);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -348,7 +350,8 @@ export class Renderer {
   private renderTransitionIn(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, snake: Point[], hue: number): void {
     const p = this.transitionProgress; const cx = canvas.width / 2; const cy = canvas.height / 2;
     ctx.strokeStyle = `hsla(${hue}, 100%, 50%, ${1 - p})`; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(cx, cy, p * canvas.width, 0, Math.PI * 2); ctx.stroke();
+    const r = Math.max(0, p * canvas.width);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
     snake.forEach((seg, i) => {
       const targetX = seg.x * this.cellSize + this.cellSize / 2; const targetY = seg.y * this.cellSize + this.cellSize / 2;
       const x = (i % 2 === 0 ? -100 : canvas.width + 100) + (targetX - (i % 2 === 0 ? -100 : canvas.width + 100)) * p;

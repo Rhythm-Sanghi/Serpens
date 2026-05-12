@@ -42,12 +42,15 @@ export class Engine {
   private loop(currentTime: number): void {
     if (!this.isRunning) return;
 
-    const deltaTime = currentTime - this.lastTime;
+    let deltaTime = currentTime - this.lastTime;
+    
+    // Safety Guard: Reset if delta is too large (e.g. browser tab suspended)
+    if (deltaTime > 100) deltaTime = 16;
+    
     this.lastTime = currentTime;
 
     if (!this.isPaused) {
-      // Delta-Time Variable Speed: Decouple from refresh rate
-      this.accumulator += Math.min(deltaTime, 250);
+      this.accumulator += deltaTime;
 
       while (this.accumulator >= this.logicTickRate) {
         this.onLogicTick();

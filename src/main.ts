@@ -216,7 +216,7 @@ startBtn.addEventListener('click', async () => {
   await new Promise<void>(resolve => {
     function animate(time: number) {
       const elapsed = time - start;
-      const progress = Math.min(elapsed / duration, 1);
+      const progress = Math.min(1, Math.max(0, elapsed / duration));
       renderer.setTransitionProgress(progress);
       if (progress < 1) requestAnimationFrame(animate); else resolve();
     }
