@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>SERPENS // ULTIMATE</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="ui-layer">
+        <div id="header">
+          <div id="score">SERPENS // 000000</div>
+          <div id="indicators">
+            <div id="ai-indicator" class="hidden">AI_ACTIVE</div>
+            <div id="multiplayer-indicator" class="hidden">MP_CONNECTED</div>
+          </div>
+        </div>
+        
+        <div id="score-mini">000000</div>
+        
+        <div id="toast-container"></div>
+      </div>
+
+      <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+      </div>
+
+      <div id="menu-overlay" class="glass-panel">
+        <div id="menu-landing" class="menu-tier">
+          <h1 id="title-ticker">SERPENS</h1>
+          <div class="menu-actions">
+            <button id="start-btn" class="primary-btn">INITIATE_SYSTEM</button>
+            <button id="config-btn" class="secondary-btn">CONFIGURATION</button>
+          </div>
+        </div>
+
+        <div id="menu-config" class="menu-tier hidden">
+          <div class="config-header">
+            <button id="back-to-menu" class="icon-btn">←</button>
+            <h2>SYSTEM_CONFIGURATION</h2>
+          </div>
+          
+          <div class="config-groups">
+            <div class="config-group">
+              <h3>[ GAMEPLAY_LOGIC ]</h3>
+              <label class="toggle-row">
+                <span>AUTOPILOT (P)</span>
+                <input type="checkbox" id="toggle-autopilot">
+                <span class="slider"></span>
+              </label>
+              <label class="toggle-row">
+                <span>BIOME_MUTATOR</span>
+                <input type="checkbox" id="toggle-biomes" checked>
+                <span class="slider"></span>
+              </label>
+              <label class="toggle-row">
+                <span>TIME_REWIND (R)</span>
+                <input type="checkbox" id="toggle-rewind" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="config-group">
+              <h3>[ HARDWARE_LAYER ]</h3>
+              <label class="toggle-row">
+                <span>HAPTIC_FEEDBACK</span>
+                <input type="checkbox" id="toggle-haptics" checked>
+                <span class="slider"></span>
+              </label>
+              <label class="toggle-row">
+                <span>MULTIPLAYER</span>
+                <input type="checkbox" id="toggle-multiplayer">
+                <span class="slider"></span>
+              </label>
+              <label class="toggle-row">
+                <span>AUDIO_SYNTH</span>
+                <input type="checkbox" id="toggle-audio" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="launch-sequence" class="hidden">
+        <div class="loading-telemetry">
+          <div id="loading-text">STABILIZING_GRID...</div>
+          <div class="loading-bar-container">
+            <div id="loading-progress"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
