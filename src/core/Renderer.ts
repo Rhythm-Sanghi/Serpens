@@ -331,7 +331,7 @@ export class Renderer {
 
     ctx.strokeStyle = this.accentColor;
     ctx.lineWidth = 1;
-    const r = Math.max(0, 10 * this.cellSize);
+    r = Math.max(0, 10 * this.cellSize);
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
   }
