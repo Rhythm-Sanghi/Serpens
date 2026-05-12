@@ -325,7 +325,7 @@ export class Renderer {
     const cy = canvas.height / 2;
     // MINIMALIST_VOID: Solid circle + thin Teal ring
     ctx.fillStyle = '#1a1a1a';
-    const r = Math.max(0, 10 * this.cellSize);
+    let r = Math.max(0, 10 * this.cellSize);
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
 
