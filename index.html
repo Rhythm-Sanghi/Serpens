@@ -5,8 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>SERPENS // ULTIMATE</title>
-    <script type="module" crossorigin src="./assets/index-BD7bQUC7.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BrJCG1-G.css">
+    <script type="module" crossorigin src="./assets/index-CIQnU2ky.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DBgAEeqb.css">
   </head>
   <body>
     <div id="app">
@@ -97,24 +97,29 @@
         </div>
 
         <div id="menu-vault" class="menu-tier hidden">
-          <div class="config-header">
-            <button id="vault-back-btn" class="icon-btn">←</button>
-            <h2>DATA_VAULT // DECK</h2>
+          <div class="vault-header">
+            <button id="vault-back-btn" class="vault-back-btn">◀ RETURN</button>
+            <div class="vault-title-box">
+              <h2>DATA_VAULT // DECK</h2>
+              <div class="vault-subtitle">[ SECURE BIOMETRIC ARCHIVE ]</div>
+            </div>
           </div>
           
-          <div class="vault-tabs">
-            <button id="tab-telemetry" class="vault-tab active">TELEMETRY</button>
-            <button id="tab-palettes" class="vault-tab">ACHIEVEMENTS</button>
+          <div class="vault-tabs-container">
+            <div class="vault-tabs">
+              <button id="tab-telemetry" class="vault-tab active">TELEMETRY</button>
+              <button id="tab-palettes" class="vault-tab">ACHIEVEMENTS</button>
+            </div>
           </div>
 
           <div id="vault-telemetry-view" class="vault-view">
             <div class="telemetry-grid">
-              <div class="tel-card"><span>HIGH_SCORE</span><span id="tel-high-score">0</span></div>
-              <div class="tel-card"><span>TOTAL_METERS</span><span id="tel-total-meters">0 U</span></div>
-              <div class="tel-card"><span>APEX_SPEED</span><span id="tel-apex-speed">0 U/S</span></div>
-              <div class="tel-card"><span>NEAR_MISSES</span><span id="tel-near-misses">0</span></div>
-              <div class="tel-card"><span>VOID_ESCAPES</span><span id="tel-void-escapes">0</span></div>
-              <div class="tel-card"><span>SESSIONS</span><span id="tel-sessions">0</span></div>
+              <div class="tel-card"><span class="tel-label"><span class="tel-icon">🏆</span> HIGH_SCORE</span><span id="tel-high-score" class="tel-val">0</span></div>
+              <div class="tel-card"><span class="tel-label"><span class="tel-icon">🛰️</span> TOTAL_METERS</span><span id="tel-total-meters" class="tel-val">0 U</span></div>
+              <div class="tel-card"><span class="tel-label"><span class="tel-icon">⚡</span> APEX_SPEED</span><span id="tel-apex-speed" class="tel-val">0.0 U/S</span></div>
+              <div class="tel-card"><span class="tel-label"><span class="tel-icon">⚠️</span> NEAR_MISSES</span><span id="tel-near-misses" class="tel-val">0</span></div>
+              <div class="tel-card"><span class="tel-label"><span class="tel-icon">🌌</span> VOID_ESCAPES</span><span id="tel-void-escapes" class="tel-val">0</span></div>
+              <div class="tel-card"><span class="tel-label"><span class="tel-icon">⏱️</span> SESSIONS</span><span id="tel-sessions" class="tel-val">0</span></div>
             </div>
           </div>
 
