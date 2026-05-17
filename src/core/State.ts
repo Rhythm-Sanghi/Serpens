@@ -278,7 +278,10 @@ export class StateManager {
   }
 
   private triggerGlitch(): void {
-    const types = [GlitchType.WARP, GlitchType.INVERT, GlitchType.CRUSH, GlitchType.DARKNESS, GlitchType.PHANTOM];
+    const isMobile = window.innerWidth < 768;
+    const types = isMobile 
+      ? [GlitchType.INVERT, GlitchType.CRUSH, GlitchType.DARKNESS, GlitchType.PHANTOM]
+      : [GlitchType.WARP, GlitchType.INVERT, GlitchType.CRUSH, GlitchType.DARKNESS, GlitchType.PHANTOM];
     this.state.glitch = types[Math.floor(Math.random() * types.length)];
     this.state.glitchTimeLeft = 8 * this.initialFps; // ~8 seconds
     this.glitchGraceFrames = 2; // Shield during transition
