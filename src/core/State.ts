@@ -397,6 +397,10 @@ export class StateManager {
     this.state = this.getInitialState(); this.state.status = status; this.setMultiplayer(multi); this.setBiomesEnabled(biomes);
     this.spawnFood();
     this.prevState = this.copyState(this.state); this.snapshots = [];
+    this.glitchGraceFrames = 0;
+    this.invincibilityTimer = 0;
+    this.frameCount = 0;
+    this.lastDeathWasValid = true;
   }
 
   private calculateAutopilotDirection(snake: Point[], currentDir: Direction): Direction {

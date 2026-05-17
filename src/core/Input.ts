@@ -142,5 +142,6 @@ export class InputHandler {
   public reset() {
     this.directionQueue = [];
     this.keysPressed.clear();
+    this.touchStart = null;
   }
 }

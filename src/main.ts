@@ -224,6 +224,8 @@ startBtn.addEventListener('click', async () => {
   
   launchSequence.classList.add('hidden');
   state.reset();
+  input.reset();
+  appEl.style.filter = 'none';
   engine.setPaused(false);
   state.setStatus(GameStatus.TRANSITION_IN);
   if (GAME_CONFIG.audioEnabled) audio.playTransition();
