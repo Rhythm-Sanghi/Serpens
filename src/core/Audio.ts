@@ -60,11 +60,16 @@ export class AudioSystem {
   }
 
   private tempoScale = 0;
+  private lastTargetFreq = 0;
   public updateHeartbeat(score: number, dangerDist: number) {
     if (!this.isInitialized || !this.lowPass || this.ctx?.state !== 'running') return;
     this.tempoScale = score / 50;
-    const freq = 400 + Math.min(dangerDist / 10, 1) * 1600;
-    this.lowPass.frequency.setTargetAtTime(freq, this.ctx!.currentTime, 0.1);
+    const targetFrequency = 400 + Math.min(dangerDist / 10, 1) * 1600;
+    const safeFrequency = Math.max(20, Math.min(20000, targetFrequency));
+    if (Math.abs(safeFrequency - this.lastTargetFreq) > 5) {
+      this.lowPass.frequency.setTargetAtTime(safeFrequency, this.ctx!.currentTime, 0.1);
+      this.lastTargetFreq = safeFrequency;
+    }
   }
 
   private canPlay(): boolean {

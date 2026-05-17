@@ -1,11 +1,11 @@
 import { type Point, Direction } from '../Types';
 
 export interface BiomeStrategy {
-  applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, gridSize: number, frame: number): { head: Point, dir: Direction };
+  applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, gridWidth: number, gridHeight: number, frame: number): { head: Point, dir: Direction };
 }
 
 export class DefaultBiome implements BiomeStrategy {
-  applyPhysics(head: Point, _currentDir: Direction, nextDir: Direction, _gridSize: number, _frame: number): { head: Point, dir: Direction } {
+  applyPhysics(head: Point, _currentDir: Direction, nextDir: Direction, _gridWidth: number, _gridHeight: number, _frame: number): { head: Point, dir: Direction } {
     const newHead = { ...head };
     switch (nextDir) {
       case Direction.UP: newHead.y--; break;
@@ -18,10 +18,11 @@ export class DefaultBiome implements BiomeStrategy {
 }
 
 export class VoidBiome implements BiomeStrategy {
-  applyPhysics(head: Point, _currentDir: Direction, nextDir: Direction, gridSize: number, _frame: number): { head: Point, dir: Direction } {
-    const center = gridSize / 2;
-    const dx = center - head.x;
-    const dy = center - head.y;
+  applyPhysics(head: Point, _currentDir: Direction, nextDir: Direction, gridWidth: number, gridHeight: number, _frame: number): { head: Point, dir: Direction } {
+    const centerX = gridWidth / 2;
+    const centerY = gridHeight / 2;
+    const dx = centerX - head.x;
+    const dy = centerY - head.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     let finalDir = nextDir;
@@ -30,10 +31,11 @@ export class VoidBiome implements BiomeStrategy {
     // Inner Core (0-2): Strong pull
     // Outer Ring (2-8): Subtle nudge
     // Beyond 8: Zero force
-    if (dist <= 8) {
+    if (dist <= 12) {
       // G constant tuned for 15fps logic
-      const G = 2.5; 
-      const pullProbability = Math.min(G / (dist * dist), 1.0);
+      const G = 4.0;
+      const safeDist = Math.max(0.1, dist);
+      const pullProbability = Math.min(G / (safeDist * safeDist), 1.0);
       
       if (Math.random() < pullProbability) {
         if (Math.abs(dx) > Math.abs(dy)) finalDir = dx > 0 ? Direction.RIGHT : Direction.LEFT;
@@ -55,7 +57,7 @@ export class VoidBiome implements BiomeStrategy {
 export class IceBiome implements BiomeStrategy {
   private driftActive = false;
 
-  applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, _gridSize: number, _frame: number): { head: Point, dir: Direction } {
+  applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, _gridWidth: number, _gridHeight: number, _frame: number): { head: Point, dir: Direction } {
     let finalDir = nextDir;
     
     // Inertia: If direction changed, slide one extra tile in currentDir first
@@ -78,7 +80,7 @@ export class IceBiome implements BiomeStrategy {
 }
 
 export class MirrorBiome implements BiomeStrategy {
-  applyPhysics(head: Point, _currentDir: Direction, nextDir: Direction, _gridSize: number, _frame: number): { head: Point, dir: Direction } {
+  applyPhysics(head: Point, _currentDir: Direction, nextDir: Direction, _gridWidth: number, _gridHeight: number, _frame: number): { head: Point, dir: Direction } {
     const newHead = { ...head };
     switch (nextDir) {
       case Direction.UP: newHead.y--; break;

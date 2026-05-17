@@ -28,7 +28,9 @@ export const GlitchType = {
   NONE: 'NONE',
   INVERT: 'INVERT_REALITY',
   CRUSH: 'PIXEL_CRUSH',
-  WARP: 'CHRONOS_WARP'
+  WARP: 'CHRONOS_WARP',
+  DARKNESS: 'DARKNESS',
+  PHANTOM: 'PHANTOM'
 } as const;
 export type GlitchType = typeof GlitchType[keyof typeof GlitchType];
 
@@ -66,7 +68,8 @@ export interface GameState {
 }
 
 export interface EngineConfig {
-  gridSize: number;
+  gridWidth: number;
+  gridHeight: number;
   logicFps: number;
   renderFps: number;
 }

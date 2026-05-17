@@ -7,7 +7,8 @@ export class StateManager {
   private prevState: GameState;
   private snapshots: Snapshot[] = [];
   private readonly maxSnapshots: number = 1000;
-  private readonly gridSize: number;
+  private gridWidth: number;
+  private gridHeight: number;
   private readonly initialFps = 15;
   private frameCount = 0;
   private biomesEnabled = true;
@@ -24,14 +25,41 @@ export class StateManager {
     [BiomeType.MIRROR]: new MirrorBiome(),
   };
 
-  constructor(gridSize: number) {
-    this.gridSize = gridSize;
+  constructor(gridWidth: number, gridHeight: number) {
+    this.gridWidth = gridWidth;
+    this.gridHeight = gridHeight;
     this.state = this.getInitialState();
-    this.prevState = JSON.parse(JSON.stringify(this.state));
+    this.prevState = this.copyState(this.state);
+  }
+
+  private copyState(src: GameState): GameState {
+    return {
+      snake: src.snake.map(p => ({...p})),
+      rivalSnake: src.rivalSnake ? src.rivalSnake.map(p => ({...p})) : null,
+      food: { ...src.food },
+      glitchBit: src.glitchBit ? { ...src.glitchBit } : null,
+      direction: src.direction,
+      rivalDirection: src.rivalDirection,
+      score: src.score,
+      status: src.status,
+      biome: src.biome,
+      glitch: src.glitch,
+      glitchAge: src.glitchAge,
+      glitchTimeLeft: src.glitchTimeLeft,
+      stats: { ...src.stats },
+      isAutopilot: src.isAutopilot,
+      isMultiplayer: src.isMultiplayer,
+      isRewindEnabled: src.isRewindEnabled,
+      isBulletTime: src.isBulletTime,
+      isBiomeWarning: src.isBiomeWarning,
+      invincibilityTimeLeft: src.invincibilityTimeLeft,
+      tickRate: src.tickRate,
+      heatmap: src.heatmap // reference
+    };
   }
 
   private getInitialState(): GameState {
-    const heatmap = Array(this.gridSize).fill(0).map(() => Array(this.gridSize).fill(0));
+    const heatmap = Array(this.gridHeight).fill(0).map(() => Array(this.gridWidth).fill(0));
     return {
       snake: [
         { x: 10, y: 10 },
@@ -80,7 +108,7 @@ export class StateManager {
     if (this.state.status !== GameStatus.PLAYING && this.state.status !== GameStatus.GAME_OVER) return;
 
     this.frameCount++;
-    this.prevState = JSON.parse(JSON.stringify(this.state));
+    this.prevState = this.copyState(this.state);
 
     if (this.biomesEnabled) this.updateBiome();
     this.updateGlitches();
@@ -111,14 +139,18 @@ export class StateManager {
     }
 
     const strategy = this.biomes[this.state.biome];
-    const { head, dir } = strategy.applyPhysics(this.state.snake[0], this.state.direction, this.state.direction, this.gridSize, this.frameCount);
+    const dirBeforeBiome = this.state.direction; // snapshot before biome physics
+    const { head, dir } = strategy.applyPhysics(this.state.snake[0], this.state.direction, this.state.direction, this.gridWidth, this.gridHeight, this.frameCount);
     this.state.direction = dir;
 
-    // 1. Grid Bounds Protection (Crash prevention)
-    if (head.x < 0 || head.x >= this.gridSize || head.y < 0 || head.y >= this.gridSize) {
-      if (this.glitchGraceFrames > 0) {
-        head.x = Math.max(0, Math.min(this.gridSize - 1, head.x));
-        head.y = Math.max(0, Math.min(this.gridSize - 1, head.y));
+    // 1. Grid Bounds Protection
+    // If the Void biome's gravity changed the direction and pushed us out,
+    // treat it as a grace bounce rather than an instant kill.
+    const biomeChangedDir = (dir !== dirBeforeBiome);
+    if (head.x < 0 || head.x >= this.gridWidth || head.y < 0 || head.y >= this.gridHeight) {
+      if (this.glitchGraceFrames > 0 || biomeChangedDir) {
+        head.x = Math.max(0, Math.min(this.gridWidth - 1, head.x));
+        head.y = Math.max(0, Math.min(this.gridHeight - 1, head.y));
       } else {
         console.log(`[SYSTEM_LOG]: Death by WALL at (${head.x},${head.y})`);
         this.lastDeathWasValid = true;
@@ -127,13 +159,16 @@ export class StateManager {
       }
     }
 
-    // 2. Void Event Horizon Collision (Center of the well)
+    // 2. Void Event Horizon Collision
+    // Only kill when very close to the absolute center AND not invincible.
+    // dist < 0.5 means the snake is essentially ON the singularity.
     if (this.state.biome === BiomeType.VOID && this.invincibilityTimer <= 0) {
-      const center = this.gridSize / 2;
-      const dx = center - head.x;
-      const dy = center - head.y;
+      const centerX = this.gridWidth / 2;
+      const centerY = this.gridHeight / 2;
+      const dx = centerX - head.x;
+      const dy = centerY - head.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 1.0) { // EVENT_HORIZON
+      if (dist < 0.5) {
         if (this.glitchGraceFrames <= 0) {
           console.log(`[SYSTEM_LOG]: Death by VOID_EVENT_HORIZON at (${head.x},${head.y})`);
           this.lastDeathWasValid = true;
@@ -170,7 +205,7 @@ export class StateManager {
     // Mirror logic
     let mirrorHead: Point | null = null;
     if (this.state.biome === BiomeType.MIRROR) {
-      mirrorHead = { x: this.gridSize - 1 - head.x, y: head.y };
+      mirrorHead = { x: this.gridWidth - 1 - head.x, y: head.y };
       if (this.checkCollision(mirrorHead, this.state.snake)) { this.state.status = GameStatus.GAME_OVER; return; }
     }
 
@@ -232,13 +267,13 @@ export class StateManager {
 
   private spawnGlitchBit(): void {
     this.state.glitchBit = {
-      x: Math.floor(Math.random() * this.gridSize),
-      y: Math.floor(Math.random() * this.gridSize),
+      x: Math.floor(Math.random() * this.gridWidth),
+      y: Math.floor(Math.random() * this.gridHeight),
     };
   }
 
   private triggerGlitch(): void {
-    const types = [GlitchType.WARP]; // Only WARP for Minimalist Refinement
+    const types = [GlitchType.WARP, GlitchType.INVERT, GlitchType.CRUSH, GlitchType.DARKNESS, GlitchType.PHANTOM];
     this.state.glitch = types[Math.floor(Math.random() * types.length)];
     this.state.glitchTimeLeft = 8 * this.initialFps; // ~8 seconds
     this.glitchGraceFrames = 2; // Shield during transition
@@ -250,7 +285,7 @@ export class StateManager {
       if (this.biomeWarningTimer <= 0) {
         this.state.isBiomeWarning = false;
         this.state.biome = this.pendingBiome!;
-        this.invincibilityTimer = 30; // 2 seconds protection
+        this.invincibilityTimer = 45; // 3 seconds of grace when void activates
         window.dispatchEvent(new CustomEvent('biome-shift', { detail: this.state.biome }));
       }
       return;
@@ -265,12 +300,12 @@ export class StateManager {
     if (newBiome !== this.state.biome) {
       if (newBiome === BiomeType.VOID) {
         this.state.isBiomeWarning = true;
-        this.biomeWarningTimer = 45; // 3 seconds
+        this.biomeWarningTimer = 90; // 6 seconds warning — enough to react
         this.pendingBiome = newBiome;
         window.dispatchEvent(new CustomEvent('biome-warning', { detail: newBiome }));
       } else {
         this.state.biome = newBiome;
-        this.invincibilityTimer = 30; // 2 seconds protection
+        this.invincibilityTimer = 45; // 3 seconds protection on other biome shifts
         window.dispatchEvent(new CustomEvent('biome-shift', { detail: newBiome }));
       }
     }
@@ -292,25 +327,33 @@ export class StateManager {
   }
 
   private resetRival(): void {
-    this.state.rivalSnake = [{ x: this.gridSize - 11, y: this.gridSize - 11 }, { x: this.gridSize - 10, y: this.gridSize - 11 }, { x: this.gridSize - 9, y: this.gridSize - 11 }];
+    this.state.rivalSnake = [{ x: this.gridWidth - 11, y: this.gridHeight - 11 }, { x: this.gridWidth - 10, y: this.gridHeight - 11 }, { x: this.gridWidth - 9, y: this.gridHeight - 11 }];
     this.state.rivalDirection = Direction.LEFT;
   }
 
   private checkCollision(p: Point, snake: Point[]): boolean {
-    if (p.x < 0 || p.x >= this.gridSize || p.y < 0 || p.y >= this.gridSize) return true;
+    if (p.x < 0 || p.x >= this.gridWidth || p.y < 0 || p.y >= this.gridHeight) return true;
     return snake.some((seg) => seg.x === p.x && seg.y === p.y);
   }
 
   private spawnFood(): void {
     let newFood: Point;
     const allSegments = [...this.state.snake, ...(this.state.rivalSnake || [])];
-    do { newFood = { x: Math.floor(Math.random() * this.gridSize), y: Math.floor(Math.random() * this.gridSize) };
-    } while (allSegments.some(s => s.x === newFood.x && s.y === newFood.y));
+    const isVoid = this.state.biome === BiomeType.VOID;
+    const voidCX = this.gridWidth  / 2;
+    const voidCY = this.gridHeight / 2;
+    // Keep food outside the void event horizon (radius 6 cells) so it's reachable
+    const VOID_CLEAR_RADIUS = 7;
+    do {
+      newFood = { x: Math.floor(Math.random() * this.gridWidth), y: Math.floor(Math.random() * this.gridHeight) };
+      const onSnake   = allSegments.some(s => s.x === newFood.x && s.y === newFood.y);
+      const inVoidZone = isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < VOID_CLEAR_RADIUS;
+    } while (allSegments.some(s => s.x === newFood.x && s.y === newFood.y) || (isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < VOID_CLEAR_RADIUS));
     this.state.food = newFood;
   }
 
   private saveSnapshot(): void {
-    this.snapshots.push({ timestamp: Date.now(), state: JSON.parse(JSON.stringify(this.state)) });
+    this.snapshots.push({ timestamp: Date.now(), state: this.copyState(this.state) });
     if (this.snapshots.length > this.maxSnapshots) this.snapshots.shift();
   }
 
@@ -322,7 +365,7 @@ export class StateManager {
         if (last) { 
           this.state = last.state; 
           this.state.status = isEmergency ? GameStatus.PLAYING : GameStatus.REWINDING; 
-          this.prevState = JSON.parse(JSON.stringify(this.state)); 
+          this.prevState = this.copyState(this.state); 
         }
       } else { 
         this.state.status = isEmergency ? GameStatus.PLAYING : GameStatus.GAME_OVER; 
@@ -344,7 +387,7 @@ export class StateManager {
   public reset(): void {
     const status = this.state.status; const multi = this.state.isMultiplayer; const biomes = this.biomesEnabled;
     this.state = this.getInitialState(); this.state.status = status; this.setMultiplayer(multi); this.setBiomesEnabled(biomes);
-    this.prevState = JSON.parse(JSON.stringify(this.state)); this.snapshots = [];
+    this.prevState = this.copyState(this.state); this.snapshots = [];
   }
 
   private calculateAutopilotDirection(snake: Point[], currentDir: Direction): Direction {
@@ -362,7 +405,7 @@ export class StateManager {
       if (!this.checkCollision(next, snake)) {
         let freeNeighbors = 0;
         [{ x: next.x + 1, y: next.y }, { x: next.x - 1, y: next.y }, { x: next.x, y: next.y + 1 }, { x: next.x, y: next.y - 1 }].forEach(n => {
-          if (n.x >= 0 && n.x < this.gridSize && n.y >= 0 && n.y < this.gridSize && !snake.some(s => s.x === n.x && s.y === n.y)) freeNeighbors++;
+          if (n.x >= 0 && n.x < this.gridWidth && n.y >= 0 && n.y < this.gridHeight && !snake.some(s => s.x === n.x && s.y === n.y)) freeNeighbors++;
         });
         if (freeNeighbors > maxNeighbors) { maxNeighbors = freeNeighbors; bestDir = dir; }
       }
@@ -382,7 +425,7 @@ export class StateManager {
         return path;
       }
       [{ x: current.x + 1, y: current.y }, { x: current.x - 1, y: current.y }, { x: current.x, y: current.y + 1 }, { x: current.x, y: current.y - 1 }].forEach(neighbor => {
-        if (neighbor.x < 0 || neighbor.x >= this.gridSize || neighbor.y < 0 || neighbor.y >= this.gridSize) return;
+        if (neighbor.x < 0 || neighbor.x >= this.gridWidth || neighbor.y < 0 || neighbor.y >= this.gridHeight) return;
         if (snake.some(s => s.x === neighbor.x && s.y === neighbor.y)) return;
         const tentativeGScore = (gScore.get(key(current)) || 0) + 1;
         if (tentativeGScore < (gScore.get(key(neighbor)) || Infinity)) {
@@ -394,4 +437,12 @@ export class StateManager {
     return null;
   }
   private dist(a: Point, b: Point): number { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+
+  public resize(width: number, height: number): void {
+    this.gridWidth = width;
+    this.gridHeight = height;
+    while (this.state.heatmap.length < height) {
+      this.state.heatmap.push(Array(width).fill(0));
+    }
+  }
 }

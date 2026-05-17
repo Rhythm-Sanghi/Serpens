@@ -15,13 +15,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  /* Use the environment variables for notches */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-main);
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
 }
 
 #app {
@@ -105,7 +114,7 @@ body {
 
 #menu-overlay {
   position: absolute;
-  z-index: 100;
+  z-index: 9999;
   width: 400px;
   min-height: 300px;
   padding: 40px;
@@ -144,36 +153,42 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 100;
+  z-index: 9999;
   backdrop-filter: blur(20px);
 }
 
-.game-over-text {
-  font-size: 2.5rem;
+.failure-header {
+  font-size: clamp(2rem, 8vw, 4rem);
+  letter-spacing: clamp(4px, 1.5vw, 12px);
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  margin: 0 auto 2rem auto;
   font-weight: 300;
   color: var(--accent-color);
-  letter-spacing: 0.6em;
-  margin-bottom: 40px;
-  text-align: center;
   text-transform: uppercase;
 }
 
-.stats-panel {
-  width: 340px;
-  margin: 0 auto 30px;
+.stats-container {
+  width: 90%;
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   background: var(--glass-bg);
   backdrop-filter: blur(25px);
   border: 1px solid var(--glass-border);
-  padding: 20px 30px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
   transform: translateZ(0);
 }
 
-.stat-row {
+.stats-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  width: 100%;
   font-size: 0.7rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
@@ -182,12 +197,17 @@ body {
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.05);
 }
 
-.stat-row:last-child {
+.stats-row:last-child {
   border-bottom: none;
 }
 
-.pulse-text {
-  font-size: 0.7rem;
+.action-footer {
+  font-size: clamp(0.7rem, 2.5vw, 1rem);
+  width: 100%;
+  text-align: center;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  line-height: 1.6;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   opacity: 0.4;
@@ -195,7 +215,7 @@ body {
   transition: all 0.1s ease;
 }
 
-.pulse-text.active {
+.action-footer.active {
   color: #ffffff;
   opacity: 1;
   text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
@@ -207,12 +227,12 @@ body {
   50% { opacity: 0.8; }
 }
 
-.stat-row span:first-child {
+.stats-row span:first-child {
   min-width: 140px;
   text-align: left;
 }
 
-.stat-row span:last-child {
+.stats-row span:last-child {
   text-align: right;
   flex: 1;
 }
@@ -244,6 +264,7 @@ button {
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 12px 24px;
+  min-height: 44px;
   font-size: 0.8rem;
   letter-spacing: 0.3em;
   cursor: pointer;

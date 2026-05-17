@@ -1,7 +1,12 @@
 {
-  "name": "snake-software",
+  "name": "serpens",
+  "description": "A sophisticated minimalist snake simulation built with TypeScript and HTML5 Canvas.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rhythm-Sanghi/Serpens"
+  },
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

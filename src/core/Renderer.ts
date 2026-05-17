@@ -6,9 +6,13 @@ export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private offscreenCanvas: HTMLCanvasElement;
   private offscreenCtx: CanvasRenderingContext2D;
-  private gridSize: number;
+  private gridWidth: number;
+  private gridHeight: number;
   private cellSize: number = 0;
+  private offsetX: number = 0;
+  private offsetY: number = 0;
   private particles: any[] = [];
+  private voidParticles: { angle: number; radius: number; speed: number; size: number; opacity: number }[] = [];
   private frameCount: number = 0;
   private glitchTime: number = 0;
   private turnWobble: number = 0;
@@ -22,17 +26,22 @@ export class Renderer {
   private chronosColor: string = '#BF00FF'; // Electric Purple
   private voidCache: HTMLCanvasElement | null = null;
 
-  constructor(canvas: HTMLCanvasElement, gridSize: number) {
+  // Min/max cell size in pixels for consistent cross-device feel
+  private static readonly MIN_CELL = 14;
+  private static readonly MAX_CELL = 28;
+
+  constructor(canvas: HTMLCanvasElement, gridWidth: number, gridHeight: number) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) throw new Error('Could not get 2D context');
     this.ctx = ctx;
-    this.gridSize = gridSize;
+    this.gridWidth = gridWidth;
+    this.gridHeight = gridHeight;
 
     // High-Performance Pixel Crush Buffer (Locked to Logic Grid)
     this.offscreenCanvas = document.createElement('canvas');
-    this.offscreenCanvas.width = gridSize;
-    this.offscreenCanvas.height = gridSize;
+    this.offscreenCanvas.width = gridWidth;
+    this.offscreenCanvas.height = gridHeight;
     this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: false })!;
 
     this.resize();
@@ -40,28 +49,58 @@ export class Renderer {
     window.addEventListener('biome-shift', () => { this.biomeFlashTime = 60; });
   }
 
-  public resize(): void {
-    const size = Math.min(window.innerWidth, window.innerHeight) * 0.85;
-    this.canvas.width = size;
-    this.canvas.height = size;
-    this.cellSize = size / this.gridSize;
+  public resize(width?: number, height?: number): void {
+    if (width) this.gridWidth = width;
+    if (height) this.gridHeight = height;
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+
+    // Clamp cellSize for consistent feel on all screen sizes:
+    // - Too large on widescreen laptops, too small on narrow phones without this.
+    const rawCell = window.innerWidth / this.gridWidth;
+    const clampedCell = Math.min(Renderer.MAX_CELL, Math.max(Renderer.MIN_CELL, rawCell));
+
+    // Recalculate grid dimensions, then snap cellSize to fill the width exactly.
+    // This eliminates the fractional-pixel bars on left & right.
+    this.gridWidth  = Math.floor(window.innerWidth  / clampedCell);
+    this.gridHeight = Math.floor(window.innerHeight / clampedCell);
+    this.cellSize   = window.innerWidth / this.gridWidth; // fills width with zero gap
+
+    this.offscreenCanvas.width  = this.gridWidth;
+    this.offscreenCanvas.height = this.gridHeight;
+
+    // No horizontal offset — grid fills full width.
+    // A tiny bottom gap may remain (acceptable).
+    this.offsetX = 0;
+    this.offsetY = (window.innerHeight - this.gridHeight * this.cellSize) / 2;
+
     this.createVoidCache();
+    this.initVoidParticles();
+    window.dispatchEvent(new CustomEvent('resize-cell', { detail: this.cellSize }));
+    window.dispatchEvent(new CustomEvent('resize-grid', { detail: { w: this.gridWidth, h: this.gridHeight } }));
   }
 
   private createVoidCache(): void {
-    const size = 20 * this.cellSize;
-    this.voidCache = document.createElement('canvas');
-    this.voidCache.width = size;
-    this.voidCache.height = size;
-    const ctx = this.voidCache.getContext('2d')!;
-    const center = size / 2;
-    const grad = ctx.createRadialGradient(center, center, 0, center, center, center);
-    grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
-    grad.addColorStop(0.5, 'rgba(60, 0, 120, 0.6)');
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    const r = Math.max(0, center);
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(center, center, r, 0, Math.PI * 2); ctx.fill();
+    // Keep the cache for potential future use; void is now rendered live for animation.
+    this.voidCache = null;
+  }
+
+  private initVoidParticles(): void {
+    // Populate a field of stars/debris that orbit and spiral into the black hole.
+    this.voidParticles = [];
+    const count = 80;
+    const maxR  = this.cellSize * 9; // outer spawn radius (grid units)
+    const minR  = this.cellSize * 3; // inner pull radius
+    for (let i = 0; i < count; i++) {
+      const radius = minR + Math.random() * (maxR - minR);
+      this.voidParticles.push({
+        angle:   Math.random() * Math.PI * 2,
+        radius,
+        speed:   (0.004 + Math.random() * 0.008) * (maxR / radius), // faster near center
+        size:    0.5 + Math.random() * 1.5,
+        opacity: 0.3 + Math.random() * 0.7,
+      });
+    }
   }
 
   public triggerGlitch(): void { this.glitchTime = 15; }
@@ -82,6 +121,9 @@ export class Renderer {
     const isCrushed = state.glitch === GlitchType.CRUSH && state.glitchAge > 3; // 200ms delay
 
     this.ctx.save();
+    
+    // Apply Viewport Centering
+    this.ctx.translate(this.offsetX, this.offsetY);
     
     // Initial Clear & Arena Vignette
     this.ctx.fillStyle = '#050505';
@@ -141,7 +183,7 @@ export class Renderer {
 
     this.ctx.globalCompositeOperation = 'lighter';
 
-    this.updateAndRenderParticles(this.ctx, hue, state.biome);
+    this.updateAndRenderParticles(this.ctx, hue, state.biome, state.status);
 
     if (state.status === GameStatus.REWINDING) this.renderRewindEffect(this.ctx, this.canvas);
 
@@ -152,37 +194,36 @@ export class Renderer {
       const trailLimit = Math.min(snapshots.length, 3);
       for (let i = 1; i <= trailLimit; i++) {
         const snap = snapshots[snapshots.length - i];
-        this.renderSnakeRibbon(this.ctx, snap.state.snake, snap.state.snake, 1, hue, true, false, 0, state.biome, snap.state.direction, false);
+        this.renderSnakeRibbon(this.ctx, snap.state.snake, snap.state.snake, 1, hue, true, false, 0, state.biome, snap.state.direction, false, false);
       }
       this.ctx.restore();
     }
 
-    // PIXEL_CRUSH & INVERT: Temporarily Disabled for Minimalist Refinement
-    if (false && isCrushed) {
-      this.offscreenCtx.fillStyle = '#0a0a0a';
-      this.offscreenCtx.fillRect(0, 0, this.gridSize, this.gridSize);
+    // PIXEL_CRUSH & INVERT: Re-enabled
+    if (isCrushed) {
+      this.offscreenCtx.clearRect(0, 0, this.gridWidth, this.gridHeight);
       
       const originalCellSize = this.cellSize;
       this.cellSize = 1; // 1:1 Mapping to logic grid
       
       this.renderOptimizedFood(this.offscreenCtx, state.food, true);
       if (state.glitchBit) this.renderGlitchBit(this.offscreenCtx, state.glitchBit!);
-      this.renderSnakeRibbon(this.offscreenCtx, state.snake, prevState.snake, alpha, hue, false, true, state.invincibilityTimeLeft, state.biome, state.direction, state.isBulletTime);
+      this.renderSnakeRibbon(this.offscreenCtx, state.snake, prevState.snake, alpha, hue, false, true, state.invincibilityTimeLeft, state.biome, state.direction, state.isBulletTime, false);
       
       this.cellSize = originalCellSize;
 
       // Draw back upscaled with crisp filtering
       this.ctx.imageSmoothingEnabled = false;
-      this.ctx.drawImage(this.offscreenCanvas, 0, 0, this.gridSize, this.gridSize, 0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.drawImage(this.offscreenCanvas, 0, 0, this.gridWidth, this.gridHeight, 0, 0, this.canvas.width, this.canvas.height);
       this.ctx.imageSmoothingEnabled = true;
     } else if (state.status !== GameStatus.MENU) {
       this.renderOptimizedFood(this.ctx, state.food, false);
       if (state.glitchBit) this.renderGlitchBit(this.ctx, state.glitchBit);
-      if (state.rivalSnake) this.renderSnakeRibbon(this.ctx, state.rivalSnake, state.rivalSnake, 1, 280, false, false, 0, state.biome, state.rivalDirection, false);
+      if (state.rivalSnake) this.renderSnakeRibbon(this.ctx, state.rivalSnake, state.rivalSnake, 1, 280, false, false, 0, state.biome, state.rivalDirection, false, false);
       
       if (state.biome === BiomeType.MIRROR) {
-        const mirrorSnake = state.snake.map(s => ({ x: this.gridSize - 1 - s.x, y: s.y }));
-        this.renderSnakeRibbon(this.ctx, mirrorSnake, mirrorSnake, 1, 20, false, false, 0, state.biome, state.direction, state.isBulletTime);
+        const mirrorSnake = state.snake.map(s => ({ x: this.gridWidth - 1 - s.x, y: s.y }));
+        this.renderSnakeRibbon(this.ctx, mirrorSnake, mirrorSnake, 1, 20, false, false, 0, state.biome, state.direction, state.isBulletTime, state.glitch === GlitchType.PHANTOM);
       }
 
       if (state.status === GameStatus.REWINDING || state.glitch === GlitchType.WARP) {
@@ -194,7 +235,7 @@ export class Renderer {
           for (let i = 1; i <= 3; i++) {
             this.ctx.globalAlpha = 0.1 / i; this.ctx.save();
             this.ctx.translate(Math.sin(this.frameCount * 0.2) * i * 2, Math.cos(this.frameCount * 0.2) * i * 2);
-            this.renderSnakeRibbon(this.ctx, state.snake, prevState.snake, alpha, hue, true, false, state.invincibilityTimeLeft, state.biome, state.direction, state.isBulletTime); this.ctx.restore();
+            this.renderSnakeRibbon(this.ctx, state.snake, prevState.snake, alpha, hue, true, false, state.invincibilityTimeLeft, state.biome, state.direction, state.isBulletTime, false); this.ctx.restore();
           }
           this.ctx.globalAlpha = 1.0;
         }
@@ -204,8 +245,12 @@ export class Renderer {
           this.emitMotionStreak(state.snake[0], state.direction, prevState.direction, hue);
         }
 
-        this.renderSnakeRibbon(this.ctx, state.snake, prevState.snake, alpha, hue, false, false, state.invincibilityTimeLeft, state.biome, state.direction, state.isBulletTime);
+        this.renderSnakeRibbon(this.ctx, state.snake, prevState.snake, alpha, hue, false, false, state.invincibilityTimeLeft, state.biome, state.direction, state.isBulletTime, state.glitch === GlitchType.PHANTOM);
       }
+    }
+
+    if (state.glitch === GlitchType.DARKNESS) {
+      this.renderDarknessOverlay(this.ctx, this.canvas, state, alpha, prevState);
     }
 
     if (state.glitch !== GlitchType.NONE) {
@@ -220,7 +265,7 @@ export class Renderer {
     if (this.resumeFlashTime > 0) {
       const head = state.snake[0];
       this.ctx.fillStyle = `rgba(255, 255, 255, ${this.resumeFlashTime / 10})`;
-      const r = Math.max(0, this.cellSize * 2);
+      const r = Math.max(0.1, this.cellSize * 2);
       this.ctx.beginPath(); 
       this.ctx.arc(head.x * this.cellSize + this.cellSize / 2, head.y * this.cellSize + this.cellSize / 2, r, 0, Math.PI * 2); 
       this.ctx.fill();
@@ -252,13 +297,13 @@ export class Renderer {
   }
 
   private renderHeatmap(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, heatmap: number[][]): void {
-    const cs = canvas.width / this.gridSize;
+    const cs = canvas.width / this.gridWidth;
 
     ctx.save();
     // GPU_OPTIMIZATION: Removed ctx.filter (Blur Tax)
     ctx.globalCompositeOperation = 'screen';
-    for (let y = 0; y < this.gridSize; y++) {
-      for (let x = 0; x < this.gridSize; x++) {
+    for (let y = 0; y < this.gridHeight; y++) {
+      for (let x = 0; x < this.gridWidth; x++) {
         const val = heatmap[y][x];
         if (val === 0) continue;
         ctx.globalAlpha = 0.1; // Simple alpha loop
@@ -291,8 +336,10 @@ export class Renderer {
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(x, y, w * progress, h);
     ctx.font = `${Math.floor(canvas.height / 50)}px "JetBrains Mono"`;
+    (ctx as any).letterSpacing = "2px";
     ctx.textAlign = 'center';
-    ctx.fillText(`SYSTEM_ERROR: ${type}`, x + w / 2, y - 5);
+    ctx.fillText(`SYSTEM_ERROR: ${type}`, Math.floor(x + w / 2), Math.floor(y - 5));
+    (ctx as any).letterSpacing = "0px";
   }
 
   private renderGhostPath(ctx: CanvasRenderingContext2D, snapshots: Snapshot[]): void {
@@ -307,9 +354,9 @@ export class Renderer {
   }
 
   private renderChromaticSnake(ctx: CanvasRenderingContext2D, snake: Point[], prevSnake: Point[], alpha: number, hue: number, shift: number, isCrushed: boolean, isBulletTime: boolean): void {
-    ctx.save(); ctx.translate(-shift, 0); this.renderSnakeRibbon(ctx, snake, prevSnake, alpha, 0, true, isCrushed, 0, undefined, undefined, isBulletTime); ctx.restore();
-    ctx.save(); ctx.translate(shift, 0); this.renderSnakeRibbon(ctx, snake, prevSnake, alpha, 220, true, isCrushed, 0, undefined, undefined, isBulletTime); ctx.restore();
-    ctx.globalAlpha = 0.5; this.renderSnakeRibbon(ctx, snake, prevSnake, alpha, hue, false, isCrushed, 0, undefined, undefined, isBulletTime); ctx.globalAlpha = 1.0;
+    ctx.save(); ctx.translate(-shift, 0); this.renderSnakeRibbon(ctx, snake, prevSnake, alpha, 0, true, isCrushed, 0, undefined, undefined, isBulletTime, false); ctx.restore();
+    ctx.save(); ctx.translate(shift, 0); this.renderSnakeRibbon(ctx, snake, prevSnake, alpha, 220, true, isCrushed, 0, undefined, undefined, isBulletTime, false); ctx.restore();
+    ctx.globalAlpha = 0.5; this.renderSnakeRibbon(ctx, snake, prevSnake, alpha, hue, false, isCrushed, 0, undefined, undefined, isBulletTime, false); ctx.globalAlpha = 1.0;
   }
 
   private renderRewindEffect(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
@@ -321,19 +368,110 @@ export class Renderer {
   }
 
   private renderBlackHole(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _state: GameState): void {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    // MINIMALIST_VOID: Solid circle + thin Teal ring
-    ctx.fillStyle = '#1a1a1a';
-    let r = Math.max(0, 10 * this.cellSize);
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    const cx = canvas.width  / 2 - this.offsetX;
+    const cy = canvas.height / 2 - this.offsetY;
+
+    // Absolute time — unaffected by Chronos/rewind
+    const time  = performance.now() * 0.001;
+    const pulse = Math.sin(time * 1.2) * (this.cellSize * 0.25);
+    const baseR = this.cellSize * 6;
+    const R     = Math.max(5, baseR + pulse); // event horizon radius
+
+    ctx.save();
+
+    // ── 1. Deep Space Glow ─────────────────────────────────────────────────
+    const outerGlow = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.4);
+    outerGlow.addColorStop(0,   'rgba(80, 0, 180, 0.22)');
+    outerGlow.addColorStop(0.4, 'rgba(20, 0,  60, 0.12)');
+    outerGlow.addColorStop(1,   'rgba(0,  0,   0, 0)');
+    ctx.fillStyle = outerGlow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 2.4, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = this.accentColor;
-    ctx.lineWidth = 1;
-    r = Math.max(0, 10 * this.cellSize);
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.stroke();
+    // ── 2. Accretion Disk (flat ellipse swept around the equator) ──────────
+    const diskW = R * 2.2;
+    const diskH = R * 0.28;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(time * 0.08);
+    const disk = ctx.createLinearGradient(-diskW, 0, diskW, 0);
+    disk.addColorStop(0,    'rgba(0,0,0,0)');
+    disk.addColorStop(0.22, 'rgba(180, 60, 255, 0.18)');
+    disk.addColorStop(0.38, 'rgba(255,140,  0, 0.55)');
+    disk.addColorStop(0.5,  'rgba(255,220, 80, 0.70)');
+    disk.addColorStop(0.62, 'rgba(255,140,  0, 0.55)');
+    disk.addColorStop(0.78, 'rgba(180, 60, 255, 0.18)');
+    disk.addColorStop(1,    'rgba(0,0,0,0)');
+    ctx.fillStyle = disk;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, diskW, diskH, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // ── 3. Event Horizon (absolute black sphere) ───────────────────────────
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 4. Photon Ring / Gravitational Lens Shimmer ────────────────────────
+    const lens = ctx.createRadialGradient(cx, cy, R * 0.92, cx, cy, R * 1.18);
+    lens.addColorStop(0,   'rgba(0,0,0,0)');
+    lens.addColorStop(0.4, `rgba(0, 242, 255, ${0.18 + Math.sin(time * 3) * 0.06})`);
+    lens.addColorStop(0.7, `rgba(180, 60, 255, ${0.14 + Math.cos(time * 2.3) * 0.05})`);
+    lens.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = lens;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 5. Orbital Rings ───────────────────────────────────────────────────
+    const rings = [
+      { r: R * 1.35, speed: 0.18,  alpha: 0.22, dash: [6, 10], lw: 1.2, color: this.accentColor },
+      { r: R * 1.75, speed: -0.09, alpha: 0.14, dash: [3, 16], lw: 0.8, color: '#bf00ff' },
+      { r: R * 2.1,  speed: 0.055, alpha: 0.09, dash: [2, 22], lw: 0.6, color: '#ff8800' },
+    ];
+    for (const ring of rings) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(time * ring.speed);
+      ctx.strokeStyle = ring.color;
+      ctx.lineWidth   = ring.lw;
+      ctx.globalAlpha = ring.alpha;
+      ctx.setLineDash(ring.dash);
+      ctx.beginPath();
+      ctx.arc(0, 0, ring.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    // ── 6. Orbiting Star-Debris Particles ─────────────────────────────────
+    const maxR = this.cellSize * 9;
+    const minR = this.cellSize * 3;
+    for (const p of this.voidParticles) {
+      // Spiral inward slowly; respawn at outer edge when consumed
+      p.radius -= p.speed * 0.35;
+      p.angle  += p.speed * (baseR / Math.max(p.radius, 1)) * 0.3;
+      if (p.radius < minR * 0.6) {
+        p.radius  = minR + Math.random() * (maxR - minR);
+        p.angle   = Math.random() * Math.PI * 2;
+        p.opacity = 0.3 + Math.random() * 0.7;
+      }
+      const px = cx + Math.cos(p.angle) * p.radius;
+      const py = cy + Math.sin(p.angle) * p.radius * 0.55; // flatten to suggest depth
+      // Fade as they approach the event horizon
+      const proximity = Math.max(0, (p.radius - minR * 0.6) / (maxR - minR * 0.6));
+      ctx.globalAlpha = p.opacity * proximity;
+      ctx.fillStyle   = `hsl(${(p.angle * 57 + time * 30) % 360}, 80%, 80%)`;
+      ctx.beginPath();
+      ctx.arc(px, py, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   private renderMirrorDivider(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
@@ -348,9 +486,11 @@ export class Renderer {
   }
 
   private renderTransitionIn(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, snake: Point[], hue: number): void {
-    const p = this.transitionProgress; const cx = canvas.width / 2; const cy = canvas.height / 2;
+    const p = this.transitionProgress; 
+    const cx = canvas.width / 2 - this.offsetX; 
+    const cy = canvas.height / 2 - this.offsetY;
     ctx.strokeStyle = `hsla(${hue}, 100%, 50%, ${1 - p})`; ctx.lineWidth = 2;
-    const r = Math.max(0, p * canvas.width);
+    const r = Math.max(0.1, p * canvas.width);
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
     snake.forEach((seg, i) => {
       const targetX = seg.x * this.cellSize + this.cellSize / 2; const targetY = seg.y * this.cellSize + this.cellSize / 2;
@@ -361,16 +501,21 @@ export class Renderer {
   }
 
   private renderGrid(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _status: GameStatus, _biome: BiomeType): void {
-    ctx.strokeStyle = '#0a1f21'; 
+    ctx.strokeStyle = '#0a1f21';
     ctx.lineWidth = 1;
-    for (let i = 0; i <= this.gridSize; i++) {
-      const x = i * this.cellSize; const y = i * this.cellSize;
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    // Draw exactly gridWidth+1 vertical lines (columns)
+    for (let i = 0; i <= this.gridWidth; i++) {
+      const x = i * this.cellSize;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.gridHeight * this.cellSize); ctx.stroke();
+    }
+    // Draw exactly gridHeight+1 horizontal lines (rows)
+    for (let i = 0; i <= this.gridHeight; i++) {
+      const y = i * this.cellSize;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.gridWidth * this.cellSize, y); ctx.stroke();
     }
   }
 
-  private renderOptimizedFood(ctx: CanvasRenderingContext2D, food: Point, _isCrushed: boolean): void {
+  private renderOptimizedFood(ctx: CanvasRenderingContext2D, food: Point, isCrushed: boolean): void {
     const cx = food.x * this.cellSize + this.cellSize / 2; 
     const cy = food.y * this.cellSize + this.cellSize / 2;
     
@@ -380,6 +525,15 @@ export class Renderer {
     
     ctx.save();
     ctx.translate(cx, cy);
+
+    if (isCrushed) {
+      ctx.fillStyle = this.accentColor;
+      ctx.fillRect(-size, -size, size * 2, size * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-size / 2, -size / 2, size, size);
+      ctx.restore();
+      return;
+    }
     
     // Outer Brackets (Scanning)
     ctx.strokeStyle = this.accentColor;
@@ -406,10 +560,11 @@ export class Renderer {
     ctx.restore();
   }
 
-  private renderSnakeRibbon(ctx: CanvasRenderingContext2D, snake: Point[], prevSnake: Point[], alpha: number, _hue: number, isGhost: boolean, _isCrushed: boolean, invincibilityTimeLeft: number, _biome?: BiomeType, dir?: number, isBulletTime?: boolean): void {
+  private renderSnakeRibbon(ctx: CanvasRenderingContext2D, snake: Point[], prevSnake: Point[], alpha: number, _hue: number, isGhost: boolean, isCrushed: boolean, invincibilityTimeLeft: number, _biome?: BiomeType, dir?: number, isBulletTime?: boolean, isPhantom?: boolean): void {
     if (snake.length === 0) return;
+    const oldGlobalAlpha = ctx.globalAlpha;
     if (invincibilityTimeLeft > 0 && Math.sin(this.frameCount * 0.8) > 0) {
-      ctx.globalAlpha = 0.4;
+      ctx.globalAlpha = 0.4 * oldGlobalAlpha;
     }
     const points: { x: number, y: number }[] = [];
     snake.forEach((seg, i) => { 
@@ -424,10 +579,50 @@ export class Renderer {
     const baseColor = isDistorted ? this.chronosColor : this.accentColor;
     const secondColor = isDistorted ? '#8a00d4' : this.secondaryAccent;
 
+    // PHANTOM Echo (Anaglyph Echoes)
+    if (isPhantom && !isCrushed && !isGhost) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      points.forEach((p, i) => {
+        if (i === points.length - 1) return;
+        const p2 = points[i + 1];
+        const dx = p2.x - p.x; const dy = p2.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        
+        ctx.save();
+        // Echo offset
+        ctx.translate(p.x + Math.sin(this.frameCount * 0.1 + i) * 6, p.y + Math.cos(this.frameCount * 0.1 + i) * 6);
+        ctx.rotate(angle);
+        ctx.fillStyle = 'rgba(255, 0, 128, 0.4)'; // Magenta echo
+        ctx.fillRect(0, -this.cellSize * 0.4, dist, this.cellSize * 0.8);
+        ctx.restore();
+      });
+      ctx.restore();
+    }
+
     // Layered Kinetic Drawing
     points.forEach((p, i) => {
       if (i === points.length - 1) return;
       const p2 = points[i + 1];
+
+      let phantomAlpha = 1.0;
+      let jitterX = 0;
+      let jitterY = 0;
+
+      if (isPhantom) {
+        // Wave phasing: chunks of body phase in and out
+        const wave = (Math.sin(i * 0.5 - this.frameCount * 0.15) + 1) / 2;
+        phantomAlpha = Math.max(0.1, 1 - (i / (points.length - 1))) * wave;
+        
+        // Quantum Jitter: physical desynchronization
+        if (i > 0 && Math.random() > 0.6) {
+          jitterX = (Math.random() - 0.5) * this.cellSize * (i / points.length);
+          jitterY = (Math.random() - 0.5) * this.cellSize * (i / points.length);
+        }
+      }
+
+      ctx.globalAlpha = (invincibilityTimeLeft > 0 && Math.sin(this.frameCount * 0.8) > 0 ? 0.4 : oldGlobalAlpha) * phantomAlpha;
       
       const dx = p2.x - p.x;
       const dy = p2.y - p.y;
@@ -435,26 +630,31 @@ export class Renderer {
       const dist = Math.sqrt(dx * dx + dy * dy);
       
       ctx.save();
-      ctx.translate(p.x, p.y);
+      ctx.translate(p.x + jitterX, p.y + jitterY);
       ctx.rotate(angle);
 
-      // Core: Vertical Gradient with 0.5px gap
-      const grad = ctx.createLinearGradient(0, -this.cellSize / 2, 0, this.cellSize / 2);
-      grad.addColorStop(0, baseColor);
-      grad.addColorStop(1, secondColor);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0.5, -this.cellSize * 0.4, dist - 0.5, this.cellSize * 0.8);
+      if (isCrushed) {
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(0, -this.cellSize * 0.4, dist, this.cellSize * 0.8);
+      } else {
+        // Core: Vertical Gradient with 0.5px gap
+        const grad = ctx.createLinearGradient(0, -this.cellSize / 2, 0, this.cellSize / 2);
+        grad.addColorStop(0, baseColor);
+        grad.addColorStop(1, secondColor);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0.5, -this.cellSize * 0.4, dist - 0.5, this.cellSize * 0.8);
 
-      // Energy Spine
-      ctx.fillStyle = '#ffffff';
-      ctx.globalAlpha = 0.5;
-      ctx.fillRect(0.5, -0.5, dist - 0.5, 1);
+        // Energy Spine
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.5 * phantomAlpha;
+        ctx.fillRect(0.5, -0.5, dist - 0.5, 1);
+      }
       
       ctx.restore();
     });
 
     // Head Detail: Sensor Visor
-    if (points.length > 0 && !isGhost) {
+    if (points.length > 0 && !isGhost && !isCrushed) {
       const head = points[0];
       const flicker = isDistorted && Math.random() > 0.8 ? 0 : 1;
       ctx.save();
@@ -472,6 +672,7 @@ export class Renderer {
       
       ctx.restore();
     }
+    ctx.globalAlpha = oldGlobalAlpha;
   }
 
   public emitEatEffect(x: number, y: number): void {
@@ -503,9 +704,11 @@ export class Renderer {
     }
   }
 
-  private updateAndRenderParticles(ctx: CanvasRenderingContext2D, hue: number, biome: BiomeType): void {
+  private updateAndRenderParticles(ctx: CanvasRenderingContext2D, hue: number, biome: BiomeType, status: GameStatus): void {
     this.particles = this.particles.filter(p => {
-      p.x += p.vx; p.y += p.vy; p.vx *= 0.95; p.vy *= 0.95; p.life++; 
+      if (status !== GameStatus.REWINDING) {
+        p.x += p.vx; p.y += p.vy; p.vx *= 0.95; p.vy *= 0.95; p.life++; 
+      }
       ctx.globalAlpha = 1 - p.life / p.maxLife;
       let color = p.color || `hsl(${hue}, 100%, 50%)`; 
       if (p.isGlitch) color = (Math.random() > 0.5 ? '#FF4F4F' : '#ffffff'); 
@@ -516,5 +719,52 @@ export class Renderer {
       ctx.globalAlpha = 1.0; 
       return p.life < p.maxLife;
     });
+  }
+
+  private renderDarknessOverlay(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: GameState, alpha: number, prevState: GameState): void {
+    const head = state.snake[0];
+    const prevHead = prevState.snake[0];
+    if (!head || !prevHead) return;
+    const cx = (prevHead.x + (head.x - prevHead.x) * alpha) * this.cellSize + this.cellSize / 2;
+    const cy = (prevHead.y + (head.y - prevHead.y) * alpha) * this.cellSize + this.cellSize / 2;
+    
+    // Failing power flicker
+    const flicker = Math.random() > 0.85 ? Math.random() * 0.5 + 0.5 : 1.0;
+    const r = this.cellSize * (3 + Math.sin(this.frameCount * 0.4) * 0.5) * flicker;
+
+    ctx.save();
+    
+    // Lightning Flashes (1 frame every ~3 seconds)
+    const isLightning = Math.random() < 0.005;
+    if (isLightning) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillRect(-this.offsetX - canvas.width, -this.offsetY - canvas.height, canvas.width * 3, canvas.height * 3);
+        ctx.restore();
+        return;
+    }
+
+    const grad = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.5);
+    grad.addColorStop(0, 'rgba(5, 5, 8, 0)');
+    grad.addColorStop(0.5, 'rgba(5, 5, 8, 0.8)');
+    grad.addColorStop(1, 'rgba(5, 5, 8, 0.99)');
+    
+    ctx.fillStyle = grad;
+    ctx.fillRect(-this.offsetX - canvas.width, -this.offsetY - canvas.height, canvas.width * 3, canvas.height * 3);
+    
+    // Sonar Pings from food
+    const foodCX = state.food.x * this.cellSize + this.cellSize / 2;
+    const foodCY = state.food.y * this.cellSize + this.cellSize / 2;
+    const pingProgress = (this.frameCount % 90) / 90; // 1.5-second interval
+    const sonarR = pingProgress * this.cellSize * 12; // expand out
+    
+    ctx.globalCompositeOperation = 'screen';
+    ctx.strokeStyle = `rgba(0, 242, 255, ${(1 - pingProgress) * 0.5})`; // fading cyan
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(foodCX, foodCY, sonarR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
   }
 }

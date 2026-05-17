@@ -47,7 +47,6 @@ const toggleAudio = document.querySelector<HTMLInputElement>('#toggle-audio')!;
 const multiIndicator = document.querySelector<HTMLDivElement>('#multiplayer-indicator')!;
 const aiIndicator = document.querySelector<HTMLDivElement>('#ai-indicator')!;
 
-const GRID_SIZE = 40;
 const LOGIC_FPS = 15;
 
 const GAME_CONFIG: GameConfig = {
@@ -59,15 +58,33 @@ const GAME_CONFIG: GameConfig = {
   audioEnabled: true,
 };
 
-const state = new StateManager(GRID_SIZE);
-const renderer = new Renderer(canvas, GRID_SIZE);
+const GRID_WIDTH = 40;
+let initialCellSize = window.innerWidth / GRID_WIDTH;
+let GRID_HEIGHT = Math.floor(window.innerHeight / initialCellSize);
+
+const state = new StateManager(GRID_WIDTH, GRID_HEIGHT);
 const input = new InputHandler();
 const audio = new AudioSystem();
 
 input.setStatusProvider(() => state.getState().status);
 
 let isFreezing = false;
+let isBooting = false;
 let gameOverOverlay: HTMLDivElement | null = null;
+
+// Register resize listeners BEFORE new Renderer() — the Renderer constructor
+// calls this.resize() synchronously, which fires these events immediately.
+// If listeners aren't registered yet, state keeps GRID_WIDTH=40 while the
+// renderer uses the clamped width, making food spawn off-screen on mobile.
+window.addEventListener('resize-cell', (e: any) => {
+  input.setCellSize(e.detail);
+});
+
+window.addEventListener('resize-grid', (e: any) => {
+  state.resize(e.detail.w, e.detail.h);
+});
+
+const renderer = new Renderer(canvas, GRID_WIDTH, GRID_HEIGHT);
 
 function showToast(message: string) {
   const toast = document.createElement('div');
@@ -166,6 +183,8 @@ backToMenuBtn.addEventListener('click', () => {
 
 // Launch Sequence
 startBtn.addEventListener('click', async () => {
+  if (isBooting) return;
+  isBooting = true;
   window.focus();
   canvas.focus();
   await audio.resume();
@@ -224,6 +243,7 @@ startBtn.addEventListener('click', async () => {
   });
 
   state.setStatus(GameStatus.PLAYING);
+  isBooting = false;
 });
 
 // Audio Toggle Resume
@@ -250,7 +270,7 @@ input.setOnRestart(() => {
   engine.setPaused(false);
   state.reset();
   state.setStatus(GameStatus.PLAYING);
-  input.reset(state.getState().direction);
+  input.reset();
   hideGameOver();
   appEl.style.filter = 'none';
 });
@@ -281,7 +301,7 @@ input.setOnRewindEnd(async () => {
 
 // Engine
 const engine = new Engine(
-  { gridSize: GRID_SIZE, logicFps: LOGIC_FPS, renderFps: 60 },
+  { gridWidth: GRID_WIDTH, gridHeight: GRID_HEIGHT, logicFps: LOGIC_FPS, renderFps: 60 },
   async () => {
     if (isFreezing) return;
     
@@ -295,9 +315,9 @@ const engine = new Engine(
       }
       if (curStatus !== GameStatus.PLAYING) return;
 
-      const nextDir = input.getNextDirection();
-      const oldScore = s.score;
       const oldDir = s.direction;
+      const nextDir = input.getNextDirection(s.direction);
+      const oldScore = s.score;
       state.update(nextDir);
 
       const newState = state.getState();
@@ -308,7 +328,7 @@ const engine = new Engine(
       if (GAME_CONFIG.audioEnabled) {
         const head = newState.snake[0];
         let minDist = 100;
-        minDist = Math.min(minDist, head.x, GRID_SIZE - 1 - head.x, head.y, GRID_SIZE - 1 - head.y);
+        minDist = Math.min(minDist, head.x, GRID_WIDTH - 1 - head.x, head.y, GRID_HEIGHT - 1 - head.y);
         newState.snake.slice(1).forEach(seg => {
           const d = Math.abs(head.x - seg.x) + Math.abs(head.y - seg.y);
           minDist = Math.min(minDist, d);
@@ -354,7 +374,7 @@ const engine = new Engine(
     
     // Visual Feedback for Spacebar on Game Over
     if (state.getState().status === GameStatus.GAME_OVER) {
-      const pulseText = document.querySelector('.pulse-text');
+      const pulseText = document.querySelector('.action-footer');
       if (pulseText) {
         if (input.isKeyPressed(' ')) pulseText.classList.add('active');
         else pulseText.classList.remove('active');
@@ -379,14 +399,14 @@ function showGameOver(s: any) {
   gameOverOverlay = document.createElement('div');
   gameOverOverlay.className = 'game-over-overlay';
   gameOverOverlay.innerHTML = `
-    <div class="game-over-text">SYSTEM_FAILURE</div>
-    <div class="stats-panel">
-      <div class="stat-row"><span>APEX_VELOCITY</span><span>${s.stats.apexVelocity.toFixed(1)} U/S</span></div>
-      <div class="stat-row"><span>TOTAL_METERS</span><span>${s.stats.totalMeters} U</span></div>
-      <div class="stat-row"><span>NEAR_MISSES</span><span>${s.stats.nearMisses}</span></div>
-      <div class="stat-row" style="color: var(--accent-color); font-weight: 700"><span>FINAL_SCORE</span><span>${s.score}</span></div>
+    <div class="failure-header">SYSTEM_FAILURE</div>
+    <div class="stats-container">
+      <div class="stats-row"><span>APEX_VELOCITY</span><span>${s.stats.apexVelocity.toFixed(1)} U/S</span></div>
+      <div class="stats-row"><span>TOTAL_METERS</span><span>${s.stats.totalMeters} U</span></div>
+      <div class="stats-row"><span>NEAR_MISSES</span><span>${s.stats.nearMisses}</span></div>
+      <div class="stats-row" style="color: var(--accent-color); font-weight: 700"><span>FINAL_SCORE</span><span>${s.score}</span></div>
     </div>
-    <div class="pulse-text" style="margin-top: 20px">HOLD [R] TO REWIND OR [SPACE] TO RESTART</div>
+    <div class="action-footer" style="margin-top: 20px">HOLD [R] TO REWIND OR [SPACE] TO RESTART</div>
   `;
   appEl.appendChild(gameOverOverlay);
 }
