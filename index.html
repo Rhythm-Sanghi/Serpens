@@ -43,6 +43,7 @@
           <div class="menu-actions">
             <button id="start-btn" class="primary-btn">INITIATE_SYSTEM</button>
             <button id="config-btn" class="secondary-btn">CONFIGURATION</button>
+            <button id="vault-btn" class="secondary-btn">DATA_VAULT</button>
           </div>
         </div>
 
@@ -89,6 +90,35 @@
                 <input type="checkbox" id="toggle-audio" checked>
                 <span class="slider"></span>
               </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="menu-vault" class="menu-tier hidden">
+          <div class="config-header">
+            <button id="vault-back-btn" class="icon-btn">←</button>
+            <h2>DATA_VAULT // DECK</h2>
+          </div>
+          
+          <div class="vault-tabs">
+            <button id="tab-telemetry" class="vault-tab active">TELEMETRY</button>
+            <button id="tab-palettes" class="vault-tab">ACHIEVEMENTS</button>
+          </div>
+
+          <div id="vault-telemetry-view" class="vault-view">
+            <div class="telemetry-grid">
+              <div class="tel-card"><span>HIGH_SCORE</span><span id="tel-high-score">0</span></div>
+              <div class="tel-card"><span>TOTAL_METERS</span><span id="tel-total-meters">0 U</span></div>
+              <div class="tel-card"><span>APEX_SPEED</span><span id="tel-apex-speed">0 U/S</span></div>
+              <div class="tel-card"><span>NEAR_MISSES</span><span id="tel-near-misses">0</span></div>
+              <div class="tel-card"><span>VOID_ESCAPES</span><span id="tel-void-escapes">0</span></div>
+              <div class="tel-card"><span>SESSIONS</span><span id="tel-sessions">0</span></div>
+            </div>
+          </div>
+
+          <div id="vault-palettes-view" class="vault-view hidden">
+            <div id="palettes-grid" class="palettes-grid">
+              <!-- Dynamically populated palette cards -->
             </div>
           </div>
         </div>

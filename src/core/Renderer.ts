@@ -106,6 +106,12 @@ export class Renderer {
   public triggerResumeFlash(): void { this.resumeFlashTime = 10; }
   public setTransitionProgress(p: number): void { this.transitionProgress = Math.min(1, Math.max(0, p)); }
 
+  public setPalette(hue: number, hex: string): void {
+    this.baseHue = hue;
+    this.accentColor = hex;
+    document.documentElement.style.setProperty('--accent-color', hex);
+  }
+
   private getHue(score: number): number { return (this.baseHue + score * 0.5) % 360; }
 
   public render(state: GameState, prevState: GameState, alpha: number, snapshots: Snapshot[] = []): void {

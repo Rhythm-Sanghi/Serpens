@@ -19,6 +19,8 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { Capacitor } from '@capacitor/core';
 
+import { DataVault } from './core/Vault';
+
 console.groupCollapsed('SERPENS_SYSTEM_START');
 
 // Elements
@@ -28,16 +30,32 @@ const appEl = document.querySelector<HTMLDivElement>('#app')!;
 const menuOverlay = document.querySelector<HTMLDivElement>('#menu-overlay')!;
 const menuLanding = document.querySelector<HTMLDivElement>('#menu-landing')!;
 const menuConfig = document.querySelector<HTMLDivElement>('#menu-config')!;
+const menuVault = document.querySelector<HTMLDivElement>('#menu-vault')!;
 const launchSequence = document.querySelector<HTMLDivElement>('#launch-sequence')!;
 const loadingProgress = document.querySelector<HTMLDivElement>('#loading-progress')!;
 const loadingText = document.querySelector<HTMLDivElement>('#loading-text')!;
 const startBtn = document.querySelector<HTMLButtonElement>('#start-btn')!;
 const configBtn = document.querySelector<HTMLButtonElement>('#config-btn')!;
+const vaultBtn = document.querySelector<HTMLButtonElement>('#vault-btn')!;
+const vaultBackBtn = document.querySelector<HTMLButtonElement>('#vault-back-btn')!;
 const backToMenuBtn = document.querySelector<HTMLButtonElement>('#back-to-menu')!;
 const toastContainer = document.querySelector<HTMLDivElement>('#toast-container')!;
 const hudControls = document.querySelector<HTMLDivElement>('#hud-controls')!;
 const hudRewindBtn = document.querySelector<HTMLButtonElement>('#hud-rewind-btn')!;
 const hudAiBtn = document.querySelector<HTMLButtonElement>('#hud-ai-btn')!;
+
+const tabTelemetry = document.querySelector<HTMLButtonElement>('#tab-telemetry')!;
+const tabPalettes = document.querySelector<HTMLButtonElement>('#tab-palettes')!;
+const vaultTelemetryView = document.querySelector<HTMLDivElement>('#vault-telemetry-view')!;
+const vaultPalettesView = document.querySelector<HTMLDivElement>('#vault-palettes-view')!;
+const palettesGrid = document.querySelector<HTMLDivElement>('#palettes-grid')!;
+
+const telHighScore = document.querySelector<HTMLSpanElement>('#tel-high-score')!;
+const telTotalMeters = document.querySelector<HTMLSpanElement>('#tel-total-meters')!;
+const telApexSpeed = document.querySelector<HTMLSpanElement>('#tel-apex-speed')!;
+const telNearMisses = document.querySelector<HTMLSpanElement>('#tel-near-misses')!;
+const telVoidEscapes = document.querySelector<HTMLSpanElement>('#tel-void-escapes')!;
+const telSessions = document.querySelector<HTMLSpanElement>('#tel-sessions')!;
 
 // Toggles
 const toggleAutopilot = document.querySelector<HTMLInputElement>('#toggle-autopilot')!;
@@ -88,6 +106,9 @@ window.addEventListener('resize-grid', (e: any) => {
 });
 
 const renderer = new Renderer(canvas, GRID_WIDTH, GRID_HEIGHT);
+const vault = new DataVault();
+const activePal = vault.getActivePalette();
+renderer.setPalette(activePal.hue, activePal.hex);
 
 function showToast(message: string) {
   const toast = document.createElement('div');
@@ -177,6 +198,79 @@ configBtn.addEventListener('click', () => {
 backToMenuBtn.addEventListener('click', () => {
   menuConfig.classList.add('hidden');
   menuLanding.classList.remove('hidden');
+});
+
+function renderVaultUI() {
+  const t = vault.getTelemetry();
+  telHighScore.innerText = t.highScore.toString();
+  telTotalMeters.innerText = `${t.totalMeters} U`;
+  telApexSpeed.innerText = `${t.apexVelocity.toFixed(1)} U/S`;
+  telNearMisses.innerText = t.nearMisses.toString();
+  telVoidEscapes.innerText = t.voidEscapes.toString();
+  telSessions.innerText = t.gamesPlayed.toString();
+
+  palettesGrid.innerHTML = '';
+  const currentPal = vault.getActivePalette();
+  vault.PALETTES.forEach(p => {
+    const isUnlocked = vault.isUnlocked(p);
+    const isActive = (p.id === currentPal.id);
+    const prog = vault.getPaletteProgress(p);
+
+    const card = document.createElement('div');
+    card.className = `palette-card ${isUnlocked ? '' : 'locked'} ${isActive ? 'active' : ''}`;
+    card.innerHTML = `
+      <div class="palette-info">
+        <div class="palette-swatch" style="color: ${p.hex}; background: ${p.hex}"></div>
+        <div class="palette-details">
+          <div class="palette-name">${p.name}</div>
+          <div class="palette-req">${isUnlocked ? '[ UNLOCKED ]' : p.requirement}</div>
+        </div>
+      </div>
+      <div class="palette-progress-box">
+        <div class="palette-pct">${prog.percentage}%</div>
+        <div class="palette-bar-bg">
+          <div class="palette-bar-fill" style="width: ${prog.percentage}%; background: ${p.hex}"></div>
+        </div>
+      </div>
+    `;
+
+    if (isUnlocked) {
+      card.addEventListener('click', () => {
+        if (vault.setActivePalette(p.id)) {
+          renderer.setPalette(p.hue, p.hex);
+          showToast(`[ PALETTE EQUIPPED: ${p.name} ]`);
+          renderVaultUI();
+        }
+      });
+    }
+
+    palettesGrid.appendChild(card);
+  });
+}
+
+vaultBtn.addEventListener('click', () => {
+  menuLanding.classList.add('hidden');
+  renderVaultUI();
+  menuVault.classList.remove('hidden');
+});
+
+vaultBackBtn.addEventListener('click', () => {
+  menuVault.classList.add('hidden');
+  menuLanding.classList.remove('hidden');
+});
+
+tabTelemetry.addEventListener('click', () => {
+  tabTelemetry.classList.add('active');
+  tabPalettes.classList.remove('active');
+  vaultTelemetryView.classList.remove('hidden');
+  vaultPalettesView.classList.add('hidden');
+});
+
+tabPalettes.addEventListener('click', () => {
+  tabPalettes.classList.add('active');
+  tabTelemetry.classList.remove('active');
+  vaultPalettesView.classList.remove('hidden');
+  vaultTelemetryView.classList.add('hidden');
 });
 
 // Launch Sequence
@@ -368,6 +462,16 @@ const engine = new Engine(
         renderer.emitDeathEffect(newState.snake[0].x, newState.snake[0].y);
         renderer.triggerGlitch();
         triggerHaptic('death');
+
+        const unlocked = vault.updateTelemetry({
+          highScore: newState.score,
+          totalMeters: newState.stats.totalMeters,
+          gamesPlayed: 1,
+          nearMisses: newState.stats.nearMisses,
+          apexVelocity: newState.stats.apexVelocity
+        });
+        unlocked.forEach(name => showToast(`[ ACHIEVEMENT UNLOCKED: ${name} ]`));
+
         await new Promise(resolve => setTimeout(resolve, 100));
         showGameOver(newState);
       }
