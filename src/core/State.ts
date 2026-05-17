@@ -346,8 +346,6 @@ export class StateManager {
     const VOID_CLEAR_RADIUS = 7;
     do {
       newFood = { x: Math.floor(Math.random() * this.gridWidth), y: Math.floor(Math.random() * this.gridHeight) };
-      const onSnake   = allSegments.some(s => s.x === newFood.x && s.y === newFood.y);
-      const inVoidZone = isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < VOID_CLEAR_RADIUS;
     } while (allSegments.some(s => s.x === newFood.x && s.y === newFood.y) || (isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < VOID_CLEAR_RADIUS));
     this.state.food = newFood;
   }

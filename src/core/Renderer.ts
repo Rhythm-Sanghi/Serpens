@@ -24,7 +24,6 @@ export class Renderer {
   private accentColor: string = '#00f2ff'; // High-End Tech-Noir Cyan
   private secondaryAccent: string = '#008a91';
   private chronosColor: string = '#BF00FF'; // Electric Purple
-  private voidCache: HTMLCanvasElement | null = null;
 
   // Min/max cell size in pixels for consistent cross-device feel
   private static readonly MIN_CELL = 14;
@@ -74,15 +73,9 @@ export class Renderer {
     this.offsetX = 0;
     this.offsetY = (window.innerHeight - this.gridHeight * this.cellSize) / 2;
 
-    this.createVoidCache();
     this.initVoidParticles();
     window.dispatchEvent(new CustomEvent('resize-cell', { detail: this.cellSize }));
     window.dispatchEvent(new CustomEvent('resize-grid', { detail: { w: this.gridWidth, h: this.gridHeight } }));
-  }
-
-  private createVoidCache(): void {
-    // Keep the cache for potential future use; void is now rendered live for animation.
-    this.voidCache = null;
   }
 
   private initVoidParticles(): void {
@@ -500,7 +493,7 @@ export class Renderer {
     });
   }
 
-  private renderGrid(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _status: GameStatus, _biome: BiomeType): void {
+  private renderGrid(ctx: CanvasRenderingContext2D, _canvas: HTMLCanvasElement, _status: GameStatus, _biome: BiomeType): void {
     ctx.strokeStyle = '#0a1f21';
     ctx.lineWidth = 1;
     // Draw exactly gridWidth+1 vertical lines (columns)
