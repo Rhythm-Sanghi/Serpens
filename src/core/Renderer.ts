@@ -62,7 +62,9 @@ export class Renderer {
     const minCell = isMobile ? 24 : Renderer.MIN_CELL;
     const clampedCell = Math.min(Renderer.MAX_CELL, Math.max(minCell, rawCell));
 
-    const availableHeight = isMobile ? Math.max(300, window.innerHeight - 140) : window.innerHeight;
+    const headerH = isMobile ? 85 : 0;
+    const hudH    = isMobile ? 110 : 0;
+    const availableHeight = Math.max(300, window.innerHeight - (headerH + hudH));
 
     this.gridWidth  = Math.floor(window.innerWidth / clampedCell);
     this.gridHeight = Math.floor(availableHeight / clampedCell);
@@ -71,10 +73,9 @@ export class Renderer {
     this.offscreenCanvas.width  = this.gridWidth;
     this.offscreenCanvas.height = this.gridHeight;
 
-    // No horizontal offset — grid fills full width.
-    // A tiny bottom gap may remain (acceptable).
+    // Center the grid within the safe vertical viewport between header and HUD
     this.offsetX = 0;
-    this.offsetY = (window.innerHeight - this.gridHeight * this.cellSize) / 2;
+    this.offsetY = headerH + (availableHeight - this.gridHeight * this.cellSize) / 2;
 
     this.initVoidParticles();
     window.dispatchEvent(new CustomEvent('resize-cell', { detail: this.cellSize }));
