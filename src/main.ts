@@ -420,15 +420,9 @@ function showGameOver(s: any) {
       <div class="action-footer" style="margin: 0 0 15px 0">HOLD [R] TO REWIND OR [SPACE] TO RESTART</div>
 
       <div class="integrated-actions">
-        <button id="btn-rewind" class="ui-action-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'flex' : 'none'}">
-          <span class="btn-bracket">[</span> REWIND <span class="btn-bracket">]</span>
-        </button>
-        <button id="btn-restart" class="ui-action-btn highlight">
-          <span class="btn-bracket">[</span> REBOOT <span class="btn-bracket">]</span>
-        </button>
-        <button id="btn-menu" class="ui-action-btn">
-          <span class="btn-bracket">[</span> MENU <span class="btn-bracket">]</span>
-        </button>
+        <button id="btn-rewind" class="ui-action-btn secondary-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'flex' : 'none'}">REWIND</button>
+        <button id="btn-restart" class="ui-action-btn primary-btn">REBOOT</button>
+        <button id="btn-menu" class="ui-action-btn secondary-btn">MENU</button>
       </div>
     </div>
   `;

@@ -27,7 +27,7 @@ export class Renderer {
 
   // Min/max cell size in pixels for consistent cross-device feel
   private static readonly MIN_CELL = 14;
-  private static readonly MAX_CELL = 28;
+  private static readonly MAX_CELL = 38;
 
   constructor(canvas: HTMLCanvasElement, gridWidth: number, gridHeight: number) {
     this.canvas = canvas;
@@ -57,9 +57,9 @@ export class Renderer {
     // Clamp cellSize for consistent feel on all screen sizes:
     // - Too large on widescreen laptops, too small on narrow phones without this.
     const isMobile = window.innerWidth < 768;
-    const targetCols = isMobile ? 20 : this.gridWidth;
+    const targetCols = isMobile ? 14 : this.gridWidth;
     const rawCell = window.innerWidth / targetCols;
-    const minCell = isMobile ? 18 : Renderer.MIN_CELL;
+    const minCell = isMobile ? 24 : Renderer.MIN_CELL;
     const clampedCell = Math.min(Renderer.MAX_CELL, Math.max(minCell, rawCell));
 
     const availableHeight = isMobile ? Math.max(300, window.innerHeight - 140) : window.innerHeight;
