@@ -46,6 +46,7 @@ export class Renderer {
     this.resize();
     window.addEventListener('resize', () => this.resize());
     window.addEventListener('biome-shift', () => { this.biomeFlashTime = 60; });
+    window.addEventListener('ice-skid', (e: any) => { this.emitSkidParticles(e.detail.x, e.detail.y); });
   }
 
   public resize(width?: number, height?: number): void {
@@ -721,17 +722,32 @@ export class Renderer {
     }
   }
 
+  public emitSkidParticles(x: number, y: number): void {
+    const cx = x * this.cellSize + this.cellSize / 2;
+    const cy = y * this.cellSize + this.cellSize / 2;
+    for (let i = 0; i < 4; i++) {
+      this.particles.push({
+        x: cx, y: cy,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6,
+        life: 0, maxLife: 15 + Math.random() * 10,
+        size: 1 + Math.random() * 2,
+        color: 'rgba(150, 240, 255, 0.8)'
+      });
+    }
+  }
+
   private updateAndRenderParticles(ctx: CanvasRenderingContext2D, hue: number, biome: BiomeType, status: GameStatus): void {
-    if (biome === BiomeType.ICE && status === GameStatus.PLAYING && Math.random() < 0.4) {
+    if (biome === BiomeType.ICE && status === GameStatus.PLAYING && Math.random() < 0.6) {
       this.particles.push({
         x: Math.random() * this.gridWidth * this.cellSize,
-        y: 0,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: 1 + Math.random() * 2,
+        y: Math.random() * this.gridHeight * this.cellSize,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 1 + Math.random() * 3,
         life: 0,
-        maxLife: 120,
-        size: 1 + Math.random() * 2.5,
-        color: 'rgba(255, 255, 255, 0.75)'
+        maxLife: 200,
+        size: 1 + Math.random() * 3,
+        color: 'rgba(255, 255, 255, 0.7)'
       });
     }
 

@@ -55,29 +55,46 @@ export class VoidBiome implements BiomeStrategy {
 }
 
 export class IceBiome implements BiomeStrategy {
-  private driftActive = false;
+  private slideCounter = 0;
   private pendingDir: Direction | null = null;
+  private readonly SLIDE_DURATION = 3; // 3 full tiles of exhilarating sliding
 
   public reset(): void {
-    this.driftActive = false;
+    this.slideCounter = 0;
     this.pendingDir = null;
   }
 
-  applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, _gridWidth: number, _gridHeight: number, _frame: number): { head: Point, dir: Direction } {
+  applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, gridWidth: number, gridHeight: number, _frame: number): { head: Point, dir: Direction } {
     let finalDir = nextDir;
     
-    if (this.driftActive && this.pendingDir !== null) {
-      // Complete the slide: Execute the stored turn
-      finalDir = this.pendingDir;
-      this.driftActive = false;
-      this.pendingDir = null;
-    } else if (nextDir !== currentDir && !this.driftActive) {
-      // Start of slide: Slide 1 tile in currentDir and queue the turn
-      this.driftActive = true;
+    if (this.slideCounter > 0 && this.pendingDir !== null) {
+      this.slideCounter--;
+      let nextStepHit = false;
+      const testHead = { ...head };
+      switch (currentDir) {
+        case Direction.UP: testHead.y--; break; case Direction.DOWN: testHead.y++; break;
+        case Direction.LEFT: testHead.x--; break; case Direction.RIGHT: testHead.x++; break;
+      }
+      if (testHead.x < 0 || testHead.x >= gridWidth || testHead.y < 0 || testHead.y >= gridHeight) {
+        nextStepHit = true;
+      }
+      
+      if (this.slideCounter === 0 || nextStepHit) {
+        finalDir = this.pendingDir;
+        this.slideCounter = 0;
+        this.pendingDir = null;
+      } else {
+        finalDir = currentDir;
+        window.dispatchEvent(new CustomEvent('ice-skid', { detail: { x: head.x, y: head.y } }));
+      }
+    } else if (nextDir !== currentDir && this.slideCounter === 0) {
+      // Start of skid!
+      this.slideCounter = this.SLIDE_DURATION;
       this.pendingDir = nextDir;
       finalDir = currentDir;
+      window.dispatchEvent(new CustomEvent('ice-skid', { detail: { x: head.x, y: head.y } }));
     } else {
-      this.driftActive = false;
+      this.slideCounter = 0;
       this.pendingDir = null;
     }
 
