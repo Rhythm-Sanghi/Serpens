@@ -35,7 +35,7 @@ export class DataVault {
   public readonly PALETTES: PaletteDef[] = [
     { id: 'CYBER_CYAN', name: 'CYBER CYAN', hue: 180, hex: '#00f2ff', requirement: 'UNLOCKED BY DEFAULT', threshold: 0, type: 'FREE' },
     { id: 'ACID_LIME', name: 'ACID LIME', hue: 120, hex: '#00ff66', requirement: 'NAVIGATE 1,000 METERS', threshold: 1000, type: 'METERS' },
-    { id: 'HYPER_VIOLET', name: 'HYPER VIOLET', hue: 280, hex: '#bf00ff', requirement: 'REACH 2,500 HIGH SCORE', threshold: 2500, type: 'SCORE' },
+    { id: 'HYPER_VIOLET', name: 'HYPER VIOLET', hue: 280, hex: '#bf00ff', requirement: 'REACH 500 HIGH SCORE', threshold: 500, type: 'SCORE' },
     { id: 'SOLAR_GOLD', name: 'SOLAR GOLD', hue: 45, hex: '#ffd700', requirement: 'ACHIEVE 50 NEAR MISSES', threshold: 50, type: 'MISSES' },
     { id: 'CRIMSON_RAGE', name: 'CRIMSON RAGE', hue: 0, hex: '#ff003c', requirement: 'ESCAPE 15 SINGULARITIES', threshold: 15, type: 'ESCAPES' },
   ];
