@@ -35,6 +35,9 @@ const startBtn = document.querySelector<HTMLButtonElement>('#start-btn')!;
 const configBtn = document.querySelector<HTMLButtonElement>('#config-btn')!;
 const backToMenuBtn = document.querySelector<HTMLButtonElement>('#back-to-menu')!;
 const toastContainer = document.querySelector<HTMLDivElement>('#toast-container')!;
+const hudControls = document.querySelector<HTMLDivElement>('#hud-controls')!;
+const hudRewindBtn = document.querySelector<HTMLButtonElement>('#hud-rewind-btn')!;
+const hudAiBtn = document.querySelector<HTMLButtonElement>('#hud-ai-btn')!;
 
 // Toggles
 const toggleAutopilot = document.querySelector<HTMLInputElement>('#toggle-autopilot')!;
@@ -243,6 +246,8 @@ startBtn.addEventListener('click', async () => {
   });
 
   state.setStatus(GameStatus.PLAYING);
+  if (GAME_CONFIG.rewindEnabled) hudRewindBtn.style.display = 'block'; else hudRewindBtn.style.display = 'none';
+  hudControls.classList.remove('hidden');
   isBooting = false;
 });
 
@@ -270,6 +275,8 @@ input.setOnRestart(() => {
   engine.setPaused(false);
   state.reset();
   state.setStatus(GameStatus.PLAYING);
+  if (GAME_CONFIG.rewindEnabled) hudRewindBtn.style.display = 'block'; else hudRewindBtn.style.display = 'none';
+  hudControls.classList.remove('hidden');
   input.reset();
   hideGameOver();
   appEl.style.filter = 'none';
@@ -396,6 +403,7 @@ function updateScoreDisplays(score: number) {
 
 function showGameOver(s: any) {
   if (gameOverOverlay) return;
+  hudControls.classList.add('hidden');
   gameOverOverlay = document.createElement('div');
   gameOverOverlay.className = 'game-over-overlay';
   gameOverOverlay.innerHTML = `
@@ -407,11 +415,30 @@ function showGameOver(s: any) {
       <div class="stats-row" style="color: var(--accent-color); font-weight: 700"><span>FINAL_SCORE</span><span>${s.score}</span></div>
     </div>
     <div class="action-footer" style="margin-top: 20px">HOLD [R] TO REWIND OR [SPACE] TO RESTART</div>
+    <div class="mobile-action-buttons">
+      <button id="btn-rewind" class="action-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'block' : 'none'}">⏪ REWIND</button>
+      <button id="btn-restart" class="action-btn">🔄 RESTART</button>
+    </div>
   `;
   appEl.appendChild(gameOverOverlay);
+
+  const btnRewind = gameOverOverlay.querySelector<HTMLButtonElement>('#btn-rewind')!;
+  const btnRestart = gameOverOverlay.querySelector<HTMLButtonElement>('#btn-restart')!;
+
+  btnRewind.addEventListener('touchstart', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
+  btnRewind.addEventListener('mousedown', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
+  btnRewind.addEventListener('touchend', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
+  btnRewind.addEventListener('mouseup', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
+  btnRewind.addEventListener('touchcancel', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
+
+  btnRestart.addEventListener('click', (e) => { e.stopPropagation(); input.triggerRestart(); });
+  btnRestart.addEventListener('touchend', (e) => { e.stopPropagation(); input.triggerRestart(); });
 }
 
-function hideGameOver() { if (gameOverOverlay) { gameOverOverlay.remove(); gameOverOverlay = null; } }
+function hideGameOver() {
+  if (gameOverOverlay) { gameOverOverlay.remove(); gameOverOverlay = null; }
+  hudControls.classList.remove('hidden');
+}
 
 async function runBootSequence() {
   state.setStatus(GameStatus.BOOT);
@@ -450,6 +477,24 @@ window.addEventListener('biome-warning', (_e: any) => {
   if (GAME_CONFIG.audioEnabled) audio.playGlitch();
   triggerHaptic('warning');
 });
+
+hudAiBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const s = state.getState();
+  if (GAME_CONFIG.autopilotEnabled) {
+    const newAuto = !s.isAutopilot;
+    state.setAutopilot(newAuto);
+    if (newAuto) aiIndicator.classList.remove('hidden'); else aiIndicator.classList.add('hidden');
+    if (GAME_CONFIG.audioEnabled) audio.playTurn();
+  } else { showToast("[ SYSTEM: AUTOPILOT_LOCKED ]"); }
+});
+hudAiBtn.addEventListener('touchend', (e) => { e.stopPropagation(); });
+
+hudRewindBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
+hudRewindBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
+hudRewindBtn.addEventListener('touchend', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
+hudRewindBtn.addEventListener('mouseup', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
+hudRewindBtn.addEventListener('touchcancel', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
 
 document.addEventListener('click', () => {
   if (state.getState().status === GameStatus.PLAYING) { window.focus(); }

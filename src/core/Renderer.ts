@@ -61,8 +61,11 @@ export class Renderer {
 
     // Recalculate grid dimensions, then snap cellSize to fill the width exactly.
     // This eliminates the fractional-pixel bars on left & right.
-    this.gridWidth  = Math.floor(window.innerWidth  / clampedCell);
-    this.gridHeight = Math.floor(window.innerHeight / clampedCell);
+    const isMobile = window.innerWidth < 768;
+    const availableHeight = isMobile ? Math.max(300, window.innerHeight - 120) : window.innerHeight;
+
+    this.gridWidth  = Math.floor(window.innerWidth / clampedCell);
+    this.gridHeight = Math.floor(availableHeight / clampedCell);
     this.cellSize   = window.innerWidth / this.gridWidth; // fills width with zero gap
 
     this.offscreenCanvas.width  = this.gridWidth;

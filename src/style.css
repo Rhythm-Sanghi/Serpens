@@ -222,6 +222,69 @@ body {
   transform: scale(1.05);
 }
 
+.mobile-action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+  z-index: 10000;
+  pointer-events: auto;
+}
+
+.mobile-action-buttons button {
+  min-width: 130px;
+  padding: 14px 24px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  font-weight: 700;
+  pointer-events: auto;
+}
+
+#btn-rewind {
+  background: rgba(191, 0, 255, 0.15);
+  border: 1px solid #BF00FF;
+  color: #BF00FF;
+  box-shadow: 0 0 15px rgba(191, 0, 255, 0.3);
+}
+
+#btn-restart {
+  background: rgba(0, 242, 255, 0.15);
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+}
+
+#hud-controls {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom) + 30px);
+  right: 40px;
+  display: flex;
+  gap: 15px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.hud-btn {
+  padding: 10px 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 8px;
+  background: rgba(5, 5, 5, 0.85);
+  min-height: 40px;
+  width: auto;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+#hud-rewind-btn {
+  color: #BF00FF;
+  border: 1px solid #BF00FF;
+}
+
+#hud-ai-btn {
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.8; }

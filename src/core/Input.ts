@@ -28,6 +28,10 @@ export class InputHandler {
   public setOnRewindStart(cb: () => void) { this.onRewindStartCallback = cb; }
   public setOnRewindEnd(cb: () => void) { this.onRewindEndCallback = cb; }
 
+  public triggerRestart() { if (this.onRestartCallback) this.onRestartCallback(); }
+  public triggerRewindStart() { if (this.onRewindStartCallback) this.onRewindStartCallback(); }
+  public triggerRewindEnd() { if (this.onRewindEndCallback) this.onRewindEndCallback(); }
+
   public isKeyPressed(key: string): boolean {
     return this.keysPressed.has(key.toLowerCase());
   }
