@@ -3,23 +3,38 @@
     android:height="108dp"
     android:viewportHeight="108"
     android:viewportWidth="108">
-    <!-- Glowing Neon Halo -->
+    <!-- Cybernetic Viper Shadow / Glow Aura -->
     <path
         android:fillColor="#1A00f2ff"
-        android:pathData="M28,20 L76,20 L76,60 L64,60 L64,48 L48,48 L48,40 L76,40 L76,20 Z M28,48 L76,48 L76,88 L28,88 L28,48 Z" />
-    
-    <!-- Cybernetic S Snake Body (Cyan) -->
+        android:pathData="M34,76 L48,32 L78,46 L68,76 L48,68 Z" />
+
+    <!-- Main Outer Viper Hood & Armor Plating (Dark Tech Cyan) -->
+    <path
+        android:fillColor="#008a94"
+        android:pathData="M32,72 L46,30 L76,44 L66,72 L50,66 Z" />
+        
+    <!-- Primary Sci-Fi Viper Head Crest (Vibrant Electric Cyan) -->
     <path
         android:fillColor="#00f2ff"
-        android:pathData="M32,24 L72,24 L72,36 L44,36 L44,44 L72,44 L72,84 L32,84 L32,72 L60,72 L60,56 L32,56 Z" />
-        
-    <!-- Sensor Eye (Electric Purple) -->
-    <path
-        android:fillColor="#BF00FF"
-        android:pathData="M62,28 L66,28 L66,32 L62,32 Z" />
-        
-    <!-- Visor Accent (White) -->
+        android:pathData="M36,70 L48,34 L74,46 L64,70 L52,62 Z M50,38 L68,48 L60,66 L52,60 Z" />
+
+    <!-- Core Energy Circuit Traces (Polished White Plate) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M68,28 L70,28 L70,32 L68,32 Z" />
+        android:pathData="M52,42 L64,48 L58,58 L52,54 Z" />
+
+    <!-- Sensor Optic / Eye (Radiant Tech Purple Core) -->
+    <path
+        android:fillColor="#BF00FF"
+        android:pathData="M58,46 L64,49 L61,54 L56,51 Z" />
+        
+    <!-- Optic Visor Highlight (Pure White Spark) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,47 L62,48 L60,51 Z" />
+
+    <!-- Energy Fangs (Dual Glowing Plasma Fangs) -->
+    <path
+        android:fillColor="#00f2ff"
+        android:pathData="M62,70 L64,82 L58,74 Z M52,64 L54,76 L48,68 Z" />
 </vector>
