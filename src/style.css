@@ -740,6 +740,94 @@ input:checked + .slider:before {
   transition: width 0.5s ease;
 }
 
+/* Mobile Responsive Overhaul for Data Vault & Achievements */
+@media (max-width: 768px) {
+  #menu-vault {
+    width: 95%;
+    max-height: 88vh;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .config-header {
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  .config-header h2 {
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+  }
+
+  .vault-tabs {
+    margin-bottom: 16px;
+  }
+
+  .vault-tab {
+    padding: 8px 4px;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+  }
+
+  .telemetry-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .tel-card {
+    padding: 12px 10px;
+  }
+
+  .tel-card span:first-child {
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+  }
+
+  .tel-card span:last-child {
+    font-size: 0.95rem;
+    word-break: break-word;
+  }
+
+  .palette-card {
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .palette-info {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .palette-swatch {
+    flex-shrink: 0;
+  }
+
+  .palette-name {
+    font-size: 0.75rem;
+  }
+
+  .palette-req {
+    font-size: 0.55rem;
+    word-break: break-word;
+  }
+
+  .palette-progress-box {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .palette-bar-bg {
+    width: 75%;
+    height: 6px;
+  }
+}
+
 .hidden {
   display: none !important;
 }
