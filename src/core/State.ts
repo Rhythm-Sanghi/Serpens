@@ -346,7 +346,11 @@ export class StateManager {
     const VOID_CLEAR_RADIUS = 7;
     do {
       newFood = { x: Math.floor(Math.random() * this.gridWidth), y: Math.floor(Math.random() * this.gridHeight) };
-    } while (allSegments.some(s => s.x === newFood.x && s.y === newFood.y) || (isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < VOID_CLEAR_RADIUS));
+    } while (
+      allSegments.some(s => s.x === newFood.x && s.y === newFood.y) || 
+      (isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < VOID_CLEAR_RADIUS) || 
+      (window.innerWidth < 768 && newFood.x >= this.gridWidth - 9 && newFood.y >= this.gridHeight - 6)
+    );
     this.state.food = newFood;
   }
 

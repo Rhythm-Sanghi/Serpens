@@ -224,65 +224,102 @@ body {
 
 .mobile-action-buttons {
   display: flex;
-  gap: 15px;
-  margin-top: 25px;
+  gap: 20px;
+  margin-top: 35px;
   z-index: 10000;
   pointer-events: auto;
 }
 
 .mobile-action-buttons button {
-  min-width: 130px;
-  padding: 14px 24px;
-  font-size: 0.8rem;
-  border-radius: 8px;
+  min-width: 150px;
+  padding: 16px 28px;
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.2em;
+  border-radius: 6px;
   font-weight: 700;
   pointer-events: auto;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
+  text-transform: uppercase;
 }
 
 #btn-rewind {
   background: rgba(191, 0, 255, 0.15);
   border: 1px solid #BF00FF;
   color: #BF00FF;
-  box-shadow: 0 0 15px rgba(191, 0, 255, 0.3);
+  box-shadow: 0 0 20px rgba(191, 0, 255, 0.3), inset 0 0 10px rgba(191, 0, 255, 0.2);
+}
+
+#btn-rewind:active {
+  background: rgba(191, 0, 255, 0.3);
+  box-shadow: 0 0 30px rgba(191, 0, 255, 0.6), inset 0 0 15px rgba(191, 0, 255, 0.4);
+  transform: scale(0.96);
 }
 
 #btn-restart {
   background: rgba(0, 242, 255, 0.15);
   border: 1px solid var(--accent-color);
   color: var(--accent-color);
-  box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.3), inset 0 0 10px rgba(0, 242, 255, 0.2);
+}
+
+#btn-restart:active {
+  background: rgba(0, 242, 255, 0.3);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.6), inset 0 0 15px rgba(0, 242, 255, 0.4);
+  transform: scale(0.96);
 }
 
 #hud-controls {
   position: absolute;
-  bottom: calc(env(safe-area-inset-bottom) + 30px);
-  right: 40px;
+  bottom: calc(env(safe-area-inset-bottom) + 35px);
+  right: 35px;
   display: flex;
-  gap: 15px;
+  gap: 16px;
   z-index: 50;
   pointer-events: auto;
 }
 
 .hud-btn {
-  padding: 10px 16px;
+  padding: 12px 20px;
   font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.2em;
   font-weight: 700;
-  border-radius: 8px;
-  background: rgba(5, 5, 5, 0.85);
-  min-height: 40px;
-  width: auto;
+  border-radius: 6px;
+  background: rgba(5, 5, 5, 0.75);
+  backdrop-filter: blur(10px);
+  min-height: 44px;
   pointer-events: auto;
   touch-action: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
 }
 
 #hud-rewind-btn {
   color: #BF00FF;
   border: 1px solid #BF00FF;
+  box-shadow: 0 0 15px rgba(191, 0, 255, 0.2);
+}
+
+#hud-rewind-btn:active {
+  background: rgba(191, 0, 255, 0.25);
+  box-shadow: 0 0 25px rgba(191, 0, 255, 0.5);
+  transform: scale(0.95);
 }
 
 #hud-ai-btn {
   color: var(--accent-color);
   border: 1px solid var(--accent-color);
+  box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+}
+
+#hud-ai-btn:active {
+  background: rgba(0, 242, 255, 0.25);
+  box-shadow: 0 0 25px rgba(0, 242, 255, 0.5);
+  transform: scale(0.95);
 }
 
 @keyframes pulse {

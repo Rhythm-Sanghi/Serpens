@@ -416,8 +416,8 @@ function showGameOver(s: any) {
     </div>
     <div class="action-footer" style="margin-top: 20px">HOLD [R] TO REWIND OR [SPACE] TO RESTART</div>
     <div class="mobile-action-buttons">
-      <button id="btn-rewind" class="action-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'block' : 'none'}">⏪ REWIND</button>
-      <button id="btn-restart" class="action-btn">🔄 RESTART</button>
+      <button id="btn-rewind" class="action-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'block' : 'none'}">[ REWIND ]</button>
+      <button id="btn-restart" class="action-btn">[ RESTART ]</button>
     </div>
   `;
   appEl.appendChild(gameOverOverlay);

@@ -56,13 +56,13 @@ export class Renderer {
 
     // Clamp cellSize for consistent feel on all screen sizes:
     // - Too large on widescreen laptops, too small on narrow phones without this.
-    const rawCell = window.innerWidth / this.gridWidth;
-    const clampedCell = Math.min(Renderer.MAX_CELL, Math.max(Renderer.MIN_CELL, rawCell));
-
-    // Recalculate grid dimensions, then snap cellSize to fill the width exactly.
-    // This eliminates the fractional-pixel bars on left & right.
     const isMobile = window.innerWidth < 768;
-    const availableHeight = isMobile ? Math.max(300, window.innerHeight - 120) : window.innerHeight;
+    const targetCols = isMobile ? 20 : this.gridWidth;
+    const rawCell = window.innerWidth / targetCols;
+    const minCell = isMobile ? 18 : Renderer.MIN_CELL;
+    const clampedCell = Math.min(Renderer.MAX_CELL, Math.max(minCell, rawCell));
+
+    const availableHeight = isMobile ? Math.max(300, window.innerHeight - 140) : window.innerHeight;
 
     this.gridWidth  = Math.floor(window.innerWidth / clampedCell);
     this.gridHeight = Math.floor(availableHeight / clampedCell);
