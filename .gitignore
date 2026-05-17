@@ -6,8 +6,6 @@
 # Production / Build
 /dist
 /build
-/android
-/ios
 
 # Logs
 logs
