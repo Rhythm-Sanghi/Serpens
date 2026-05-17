@@ -9,7 +9,7 @@ export class StateManager {
   private readonly maxSnapshots: number = 1000;
   private gridWidth: number;
   private gridHeight: number;
-  private readonly initialFps = 15;
+  private initialFps = 15;
   private frameCount = 0;
   private biomesEnabled = true;
   private glitchGraceFrames = 0;
@@ -28,6 +28,7 @@ export class StateManager {
   constructor(gridWidth: number, gridHeight: number) {
     this.gridWidth = gridWidth;
     this.gridHeight = gridHeight;
+    this.initialFps = window.innerWidth < 768 ? 6 : 15;
     this.state = this.getInitialState();
     this.prevState = this.copyState(this.state);
   }
@@ -327,7 +328,8 @@ export class StateManager {
   private updateDifficulty(): void {
     if (this.state.glitch === GlitchType.WARP) return;
     const level = Math.floor(this.state.score / 50);
-    this.state.tickRate = Math.min(this.initialFps + level * 2, 40);
+    const speedRamp = window.innerWidth < 768 ? level : level * 2;
+    this.state.tickRate = Math.min(this.initialFps + speedRamp, 40);
   }
 
   private resetRival(): void {
@@ -448,6 +450,10 @@ export class StateManager {
   public resize(width: number, height: number): void {
     this.gridWidth = width;
     this.gridHeight = height;
+    this.initialFps = window.innerWidth < 768 ? 6 : 15;
+    if (this.state && (this.state.status === GameStatus.BOOT || this.state.status === GameStatus.MENU)) {
+      this.state.tickRate = this.initialFps;
+    }
     while (this.state.heatmap.length < height) {
       this.state.heatmap.push(Array(width).fill(0));
     }
