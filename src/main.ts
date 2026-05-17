@@ -436,9 +436,9 @@ function showGameOver(s: any) {
   btnMenu.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     e.preventDefault();
-    hideGameOver();
     engine.setPaused(true);
     state.setStatus(GameStatus.MENU);
+    hideGameOver();
     menuLanding.classList.remove('hidden');
     menuOverlay.classList.remove('hidden');
     menuOverlay.style.opacity = '1';
@@ -449,7 +449,11 @@ function showGameOver(s: any) {
 
 function hideGameOver() {
   if (gameOverOverlay) { gameOverOverlay.remove(); gameOverOverlay = null; }
-  hudControls.classList.remove('hidden');
+  if (state.getState().status === GameStatus.PLAYING) {
+    hudControls.classList.remove('hidden');
+  } else {
+    hudControls.classList.add('hidden');
+  }
 }
 
 async function runBootSequence() {
