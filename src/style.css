@@ -122,7 +122,7 @@ body {
   position: absolute;
   z-index: 9999;
   width: 90%;
-  max-width: 400px;
+  max-width: 450px;
   min-height: 300px;
   padding: clamp(20px, 6vw, 40px);
   box-sizing: border-box;
@@ -601,23 +601,18 @@ input:checked + .slider:before {
 #menu-vault {
   display: flex;
   flex-direction: column;
-  width: 90%;
-  max-width: 500px;
-  max-height: 85vh;
+  width: 100%;
+  max-height: 75vh;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 25px;
-  background: rgba(10, 10, 10, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+  padding-right: 10px; /* space for custom scrollbar */
 }
 
 .vault-tabs {
   display: flex;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 25px;
+  width: 100%;
 }
 
 .vault-tab {
@@ -631,6 +626,7 @@ input:checked + .slider:before {
   letter-spacing: 0.2em;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-align: center;
 }
 
 .vault-tab.active {
@@ -639,10 +635,15 @@ input:checked + .slider:before {
   text-shadow: 0 0 10px var(--accent-color);
 }
 
+.vault-view {
+  width: 100%;
+}
+
 .telemetry-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 15px;
+  width: 100%;
 }
 
 .tel-card {
@@ -679,6 +680,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  width: 100%;
 }
 
 .palette-card {
@@ -765,10 +767,9 @@ input:checked + .slider:before {
 /* Mobile Responsive Overhaul for Data Vault & Achievements */
 @media (max-width: 768px) {
   #menu-vault {
-    width: 95%;
-    max-height: 88vh;
-    padding: 16px;
-    border-radius: 12px;
+    width: 100%;
+    max-height: 80vh;
+    padding-right: 5px;
   }
 
   .config-header {
