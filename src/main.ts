@@ -408,17 +408,28 @@ function showGameOver(s: any) {
   gameOverOverlay.className = 'game-over-overlay';
   gameOverOverlay.innerHTML = `
     <div class="failure-header">SYSTEM_FAILURE</div>
-    <div class="stats-container">
-      <div class="stats-row"><span>APEX_VELOCITY</span><span>${s.stats.apexVelocity.toFixed(1)} U/S</span></div>
-      <div class="stats-row"><span>TOTAL_METERS</span><span>${s.stats.totalMeters} U</span></div>
-      <div class="stats-row"><span>NEAR_MISSES</span><span>${s.stats.nearMisses}</span></div>
-      <div class="stats-row" style="color: var(--accent-color); font-weight: 700"><span>FINAL_SCORE</span><span>${s.score}</span></div>
-    </div>
-    <div class="action-footer" style="margin-top: 20px">HOLD [R] TO REWIND OR [SPACE] TO RESTART</div>
-    <div class="mobile-action-buttons">
-      <button id="btn-rewind" class="action-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'block' : 'none'}">[ REWIND ]</button>
-      <button id="btn-restart" class="action-btn">[ RESTART ]</button>
-      <button id="btn-menu" class="action-btn">[ MENU ]</button>
+    <div class="stats-container glass-panel">
+      <div class="stats-telemetry">
+        <div class="stats-row"><span>APEX_VELOCITY</span><span>${s.stats.apexVelocity.toFixed(1)} U/S</span></div>
+        <div class="stats-row"><span>TOTAL_METERS</span><span>${s.stats.totalMeters} U</span></div>
+        <div class="stats-row"><span>NEAR_MISSES</span><span>${s.stats.nearMisses}</span></div>
+        <div class="stats-row" style="color: var(--accent-color); font-weight: 700"><span>FINAL_SCORE</span><span>${s.score}</span></div>
+      </div>
+      
+      <div class="stats-divider"></div>
+      <div class="action-footer" style="margin: 0 0 15px 0">HOLD [R] TO REWIND OR [SPACE] TO RESTART</div>
+
+      <div class="integrated-actions">
+        <button id="btn-rewind" class="ui-action-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'flex' : 'none'}">
+          <span class="btn-bracket">[</span> REWIND <span class="btn-bracket">]</span>
+        </button>
+        <button id="btn-restart" class="ui-action-btn highlight">
+          <span class="btn-bracket">[</span> REBOOT <span class="btn-bracket">]</span>
+        </button>
+        <button id="btn-menu" class="ui-action-btn">
+          <span class="btn-bracket">[</span> MENU <span class="btn-bracket">]</span>
+        </button>
+      </div>
     </div>
   `;
   appEl.appendChild(gameOverOverlay);
