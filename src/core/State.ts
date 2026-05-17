@@ -348,14 +348,14 @@ export class StateManager {
     const isVoid = this.state.biome === BiomeType.VOID;
     const voidCX = this.gridWidth  / 2;
     const voidCY = this.gridHeight / 2;
-    // Keep food outside the void event horizon (radius 6 cells) so it's reachable
-    const VOID_CLEAR_RADIUS = 7;
+    // Scale clear radius for mobile so food can spawn reliably near walls
+    const voidClearRadius = window.innerWidth < 768 ? 4.5 : 7;
     do {
       newFood = { x: Math.floor(Math.random() * this.gridWidth), y: Math.floor(Math.random() * this.gridHeight) };
     } while (
       allSegments.some(s => s.x === newFood.x && s.y === newFood.y) || 
-      (isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < VOID_CLEAR_RADIUS) || 
-      (window.innerWidth < 768 && newFood.x >= this.gridWidth - 9 && newFood.y >= this.gridHeight - 6)
+      (isVoid && Math.sqrt((voidCX - newFood.x) ** 2 + (voidCY - newFood.y) ** 2) < voidClearRadius) || 
+      (window.innerWidth < 768 && newFood.y >= this.gridHeight - 3 && newFood.x >= this.gridWidth / 2 - 3 && newFood.x <= this.gridWidth / 2 + 3)
     );
     this.state.food = newFood;
   }

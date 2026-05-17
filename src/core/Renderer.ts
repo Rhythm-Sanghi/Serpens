@@ -324,17 +324,20 @@ export class Renderer {
   }
 
   private renderGlitchUI(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, type: GlitchType, progress: number): void {
-    const w = canvas.width * 0.5; const h = 4;
+    const isMobile = window.innerWidth < 768;
+    const w = isMobile ? canvas.width * 0.85 : canvas.width * 0.5;
+    const h = isMobile ? 6 : 4;
     const x = (canvas.width - w) / 2;
-    const y = canvas.height - 20;
+    const y = canvas.height - (isMobile ? 35 : 20);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(x, y, w, h);
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(x, y, w * progress, h);
-    ctx.font = `${Math.floor(canvas.height / 50)}px "JetBrains Mono"`;
-    (ctx as any).letterSpacing = "2px";
+    const fontSize = isMobile ? Math.max(11, Math.floor(canvas.width / 32)) : Math.floor(canvas.height / 50);
+    ctx.font = `${fontSize}px "JetBrains Mono"`;
+    (ctx as any).letterSpacing = isMobile ? "1px" : "2px";
     ctx.textAlign = 'center';
-    ctx.fillText(`SYSTEM_ERROR: ${type}`, Math.floor(x + w / 2), Math.floor(y - 5));
+    ctx.fillText(`SYSTEM_ERROR: ${type}`, Math.floor(x + w / 2), Math.floor(y - 8));
     (ctx as any).letterSpacing = "0px";
   }
 
@@ -370,7 +373,8 @@ export class Renderer {
     // Absolute time — unaffected by Chronos/rewind
     const time  = performance.now() * 0.001;
     const pulse = Math.sin(time * 1.2) * (this.cellSize * 0.25);
-    const baseR = this.cellSize * 6;
+    const isMobile = window.innerWidth < 768;
+    const baseR = this.cellSize * (isMobile ? 3.5 : 6);
     const R     = Math.max(5, baseR + pulse); // event horizon radius
 
     ctx.save();
@@ -444,8 +448,8 @@ export class Renderer {
     }
 
     // ── 6. Orbiting Star-Debris Particles ─────────────────────────────────
-    const maxR = this.cellSize * 9;
-    const minR = this.cellSize * 3;
+    const maxR = this.cellSize * (isMobile ? 6.5 : 9);
+    const minR = this.cellSize * (isMobile ? 2 : 3);
     for (const p of this.voidParticles) {
       // Spiral inward slowly; respawn at outer edge when consumed
       p.radius -= p.speed * 0.35;
@@ -726,7 +730,8 @@ export class Renderer {
     
     // Failing power flicker
     const flicker = Math.random() > 0.85 ? Math.random() * 0.5 + 0.5 : 1.0;
-    const r = this.cellSize * (3 + Math.sin(this.frameCount * 0.4) * 0.5) * flicker;
+    const isMobile = window.innerWidth < 768;
+    const r = this.cellSize * (isMobile ? 4.5 : 3 + Math.sin(this.frameCount * 0.4) * 0.5) * flicker;
 
     ctx.save();
     
@@ -752,7 +757,7 @@ export class Renderer {
     const foodCX = state.food.x * this.cellSize + this.cellSize / 2;
     const foodCY = state.food.y * this.cellSize + this.cellSize / 2;
     const pingProgress = (this.frameCount % 90) / 90; // 1.5-second interval
-    const sonarR = pingProgress * this.cellSize * 12; // expand out
+    const sonarR = pingProgress * this.cellSize * (isMobile ? 8 : 12); // expand out
     
     ctx.globalCompositeOperation = 'screen';
     ctx.strokeStyle = `rgba(0, 242, 255, ${(1 - pingProgress) * 0.5})`; // fading cyan

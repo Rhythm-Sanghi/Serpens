@@ -27,11 +27,10 @@ export class VoidBiome implements BiomeStrategy {
 
     let finalDir = nextDir;
     
-    // Inverse Square Law: Force = G / Distance^2
-    // Inner Core (0-2): Strong pull
-    // Outer Ring (2-8): Subtle nudge
-    // Beyond 8: Zero force
-    if (dist <= 12) {
+    // Scale pull radius dynamically based on grid size for flawless mobile gameplay
+    const pullRadius = gridWidth < 16 ? 6 : 12;
+
+    if (dist <= pullRadius) {
       // G constant tuned for 15fps logic
       const G = 4.0;
       const safeDist = Math.max(0.1, dist);
