@@ -576,6 +576,27 @@ input:checked + .slider:before {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* Premium Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 3px;
+  box-shadow: 0 0 10px var(--accent-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: white;
+}
+
 /* Vault & Achievements Deck */
 #menu-vault {
   display: flex;
@@ -584,6 +605,7 @@ input:checked + .slider:before {
   max-width: 500px;
   max-height: 85vh;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 25px;
   background: rgba(10, 10, 10, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.15);
