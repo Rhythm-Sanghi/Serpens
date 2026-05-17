@@ -119,21 +119,27 @@ export class Renderer {
 
     this.ctx.save();
     
-    // Apply Viewport Centering
-    this.ctx.translate(this.offsetX, this.offsetY);
-    
-    // Initial Clear & Arena Vignette
+    // Initial clear of the entire physical canvas to pure solid black
     this.ctx.fillStyle = '#050505';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
+    // Apply Viewport Centering
+    this.ctx.translate(this.offsetX, this.offsetY);
+    
+    // Strictly clip all gameplay rendering to the active arena grid bounds
+    // Guaranteeing zero graphics leakage into the top score or bottom HUD areas
+    this.ctx.beginPath();
+    this.ctx.rect(0, 0, this.gridWidth * this.cellSize, this.gridHeight * this.cellSize);
+    this.ctx.clip();
+
     const vignette = this.ctx.createRadialGradient(
-      this.canvas.width / 2, this.canvas.height / 2, 0,
-      this.canvas.width / 2, this.canvas.height / 2, this.canvas.width * 0.8
+      (this.gridWidth * this.cellSize) / 2, (this.gridHeight * this.cellSize) / 2, 0,
+      (this.gridWidth * this.cellSize) / 2, (this.gridHeight * this.cellSize) / 2, (this.gridWidth * this.cellSize) * 0.8
     );
     vignette.addColorStop(0, '#0a0a0a');
     vignette.addColorStop(1, '#000000');
     this.ctx.fillStyle = vignette;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, this.gridWidth * this.cellSize, this.gridHeight * this.cellSize);
 
     if (this.shakeTime > 0) {
       this.ctx.translate((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);

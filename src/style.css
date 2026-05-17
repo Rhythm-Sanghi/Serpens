@@ -59,13 +59,10 @@ body {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: clamp(10px, 2vw, 16px) clamp(16px, 4vw, 28px);
-  background: rgba(5, 5, 5, 0.85);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(0, 242, 255, 0.15);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  padding: clamp(10px, 2vw, 16px) clamp(10px, 2vw, 20px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   box-sizing: border-box;
 }
 
