@@ -224,6 +224,7 @@ startBtn.addEventListener('click', async () => {
   
   launchSequence.classList.add('hidden');
   state.reset();
+  engine.setPaused(false);
   state.setStatus(GameStatus.TRANSITION_IN);
   if (GAME_CONFIG.audioEnabled) audio.playTransition();
 
@@ -241,6 +242,7 @@ startBtn.addEventListener('click', async () => {
   });
 
   state.setStatus(GameStatus.PLAYING);
+  engine.setPaused(false);
   if (GAME_CONFIG.rewindEnabled) hudRewindBtn.style.display = 'block'; else hudRewindBtn.style.display = 'none';
   hudControls.classList.remove('hidden');
   isBooting = false;
