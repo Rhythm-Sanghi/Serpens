@@ -588,13 +588,12 @@ input:checked + .slider:before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--accent-color);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
-  box-shadow: 0 0 10px var(--accent-color);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: white;
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Vault & Achievements Deck */
@@ -648,11 +647,11 @@ input:checked + .slider:before {
 }
 
 .vault-tab.active {
-  color: #000;
-  background: linear-gradient(90deg, var(--accent-color), #00b8c2);
-  font-weight: 800;
-  box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
-  text-shadow: none;
+  color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 700;
+  box-shadow: none;
 }
 
 .vault-view {
@@ -686,7 +685,7 @@ input:checked + .slider:before {
 
 .tel-card:hover {
   border-color: var(--accent-color);
-  box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.05);
+  box-shadow: none;
   transform: translateY(-2px);
 }
 
@@ -706,7 +705,7 @@ input:checked + .slider:before {
   font-weight: 800;
   color: white;
   letter-spacing: 0.05em;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  text-shadow: none;
 }
 
 .palettes-grid {
@@ -730,20 +729,6 @@ input:checked + .slider:before {
   overflow: hidden;
 }
 
-.palette-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%; width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-  transform: skewX(-25deg);
-  transition: none;
-}
-
-.palette-card:hover::after {
-  left: 200%;
-  transition: left 0.7s ease-in-out;
-}
-
 .palette-card.locked {
   opacity: 0.4;
   cursor: not-allowed;
@@ -752,14 +737,14 @@ input:checked + .slider:before {
 
 .palette-card:hover:not(.locked) {
   border-color: currentColor;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5), 0 0 10px currentColor;
+  box-shadow: none;
   transform: scale(1.02);
 }
 
 .palette-card.active {
-  border: 2px solid currentColor;
-  box-shadow: 0 0 15px currentColor;
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
 .palette-info {
@@ -769,11 +754,11 @@ input:checked + .slider:before {
 }
 
 .palette-swatch {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  box-shadow: 0 0 10px currentColor;
-  border: 2px solid #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: none;
 }
 
 .palette-details {
@@ -786,7 +771,7 @@ input:checked + .slider:before {
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.2em;
-  text-shadow: 0 0 5px currentColor;
+  text-shadow: none;
 }
 
 .palette-req {
@@ -821,7 +806,7 @@ input:checked + .slider:before {
 .palette-bar-fill {
   height: 100%;
   background: currentColor;
-  box-shadow: 0 0 5px currentColor;
+  box-shadow: none;
   transition: width 0.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
