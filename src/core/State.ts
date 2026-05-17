@@ -145,7 +145,7 @@ export class StateManager {
 
     const strategy = this.biomes[this.state.biome];
     const dirBeforeBiome = this.state.direction; // snapshot before biome physics
-    const { head, dir } = strategy.applyPhysics(this.state.snake[0], this.state.direction, this.state.direction, this.gridWidth, this.gridHeight, this.frameCount);
+    const { head, dir } = strategy.applyPhysics(this.state.snake[0], oldDir, this.state.direction, this.gridWidth, this.gridHeight, this.frameCount);
     this.state.direction = dir;
 
     // 1. Grid Bounds Protection
@@ -404,6 +404,7 @@ export class StateManager {
     this.invincibilityTimer = 0;
     this.frameCount = 0;
     this.lastDeathWasValid = true;
+    Object.values(this.biomes).forEach(b => { if (b.reset) b.reset(); });
   }
 
   private calculateAutopilotDirection(snake: Point[], currentDir: Direction): Direction {

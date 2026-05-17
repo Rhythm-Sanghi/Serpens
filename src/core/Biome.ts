@@ -2,6 +2,7 @@ import { type Point, Direction } from '../Types';
 
 export interface BiomeStrategy {
   applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, gridWidth: number, gridHeight: number, frame: number): { head: Point, dir: Direction };
+  reset?(): void;
 }
 
 export class DefaultBiome implements BiomeStrategy {
@@ -55,16 +56,29 @@ export class VoidBiome implements BiomeStrategy {
 
 export class IceBiome implements BiomeStrategy {
   private driftActive = false;
+  private pendingDir: Direction | null = null;
+
+  public reset(): void {
+    this.driftActive = false;
+    this.pendingDir = null;
+  }
 
   applyPhysics(head: Point, currentDir: Direction, nextDir: Direction, _gridWidth: number, _gridHeight: number, _frame: number): { head: Point, dir: Direction } {
     let finalDir = nextDir;
     
-    // Inertia: If direction changed, slide one extra tile in currentDir first
-    if (nextDir !== currentDir && !this.driftActive) {
+    if (this.driftActive && this.pendingDir !== null) {
+      // Complete the slide: Execute the stored turn
+      finalDir = this.pendingDir;
+      this.driftActive = false;
+      this.pendingDir = null;
+    } else if (nextDir !== currentDir && !this.driftActive) {
+      // Start of slide: Slide 1 tile in currentDir and queue the turn
       this.driftActive = true;
+      this.pendingDir = nextDir;
       finalDir = currentDir;
     } else {
       this.driftActive = false;
+      this.pendingDir = null;
     }
 
     const newHead = { ...head };

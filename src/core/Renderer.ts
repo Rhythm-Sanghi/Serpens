@@ -513,8 +513,12 @@ export class Renderer {
     });
   }
 
-  private renderGrid(ctx: CanvasRenderingContext2D, _canvas: HTMLCanvasElement, _status: GameStatus, _biome: BiomeType): void {
-    ctx.strokeStyle = '#0a1f21';
+  private renderGrid(ctx: CanvasRenderingContext2D, _canvas: HTMLCanvasElement, _status: GameStatus, biome: BiomeType): void {
+    if (biome === BiomeType.ICE) {
+      ctx.strokeStyle = 'rgba(0, 242, 255, 0.15)';
+    } else {
+      ctx.strokeStyle = '#0a1f21';
+    }
     ctx.lineWidth = 1;
     // Draw exactly gridWidth+1 vertical lines (columns)
     for (let i = 0; i <= this.gridWidth; i++) {
@@ -718,6 +722,19 @@ export class Renderer {
   }
 
   private updateAndRenderParticles(ctx: CanvasRenderingContext2D, hue: number, biome: BiomeType, status: GameStatus): void {
+    if (biome === BiomeType.ICE && status === GameStatus.PLAYING && Math.random() < 0.4) {
+      this.particles.push({
+        x: Math.random() * this.gridWidth * this.cellSize,
+        y: 0,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: 1 + Math.random() * 2,
+        life: 0,
+        maxLife: 120,
+        size: 1 + Math.random() * 2.5,
+        color: 'rgba(255, 255, 255, 0.75)'
+      });
+    }
+
     this.particles = this.particles.filter(p => {
       if (status !== GameStatus.REWINDING) {
         p.x += p.vx; p.y += p.vy; p.vx *= 0.95; p.vy *= 0.95; p.life++; 
