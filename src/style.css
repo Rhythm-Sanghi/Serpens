@@ -50,23 +50,32 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 10;
-  padding: calc(env(safe-area-inset-top) + 20px) 40px calc(env(safe-area-inset-bottom) + 20px) 40px;
+  padding: calc(env(safe-area-inset-top) + 16px) clamp(16px, 4vw, 40px) calc(env(safe-area-inset-bottom) + 16px) clamp(16px, 4vw, 40px);
+  box-sizing: border-box;
 }
 
 #header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
+  padding: clamp(10px, 2vw, 16px) clamp(16px, 4vw, 28px);
+  background: rgba(5, 5, 5, 0.85);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(0, 242, 255, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
 }
 
 #score {
-  font-size: 0.9rem;
-  font-weight: 300;
-  letter-spacing: 0.5em;
+  font-size: clamp(0.75rem, 3vw, 0.9rem);
+  font-weight: 700;
+  letter-spacing: clamp(0.2em, 1.5vw, 0.5em);
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
-  opacity: 0.7;
+  opacity: 0.9;
   transition: color 0.5s ease;
 }
 
@@ -75,8 +84,8 @@ body {
   flex-direction: column;
   gap: 8px;
   align-items: flex-end;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
+  font-size: clamp(0.6rem, 2.5vw, 0.7rem);
+  letter-spacing: clamp(0.1em, 1vw, 0.2em);
 }
 
 #score-mini {
