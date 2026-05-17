@@ -60,14 +60,18 @@ export class StateManager {
 
   private getInitialState(): GameState {
     const heatmap = Array(this.gridHeight).fill(0).map(() => Array(this.gridWidth).fill(0));
+    const startX = Math.floor(this.gridWidth / 2) - 2;
+    const startY = Math.floor(this.gridHeight / 2);
+    const foodX = Math.min(this.gridWidth - 3, Math.floor(this.gridWidth / 2) + 4);
+    const foodY = Math.min(this.gridHeight - 3, Math.floor(this.gridHeight / 2));
     return {
       snake: [
-        { x: 10, y: 10 },
-        { x: 9, y: 10 },
-        { x: 8, y: 10 },
+        { x: startX, y: startY },
+        { x: startX - 1, y: startY },
+        { x: startX - 2, y: startY },
       ],
       rivalSnake: null,
-      food: { x: 20, y: 10 },
+      food: { x: foodX, y: foodY },
       glitchBit: null,
       direction: Direction.RIGHT,
       rivalDirection: Direction.LEFT,
@@ -389,6 +393,7 @@ export class StateManager {
   public reset(): void {
     const status = this.state.status; const multi = this.state.isMultiplayer; const biomes = this.biomesEnabled;
     this.state = this.getInitialState(); this.state.status = status; this.setMultiplayer(multi); this.setBiomesEnabled(biomes);
+    this.spawnFood();
     this.prevState = this.copyState(this.state); this.snapshots = [];
   }
 

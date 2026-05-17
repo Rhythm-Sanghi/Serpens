@@ -418,21 +418,33 @@ function showGameOver(s: any) {
     <div class="mobile-action-buttons">
       <button id="btn-rewind" class="action-btn" style="display: ${GAME_CONFIG.rewindEnabled ? 'block' : 'none'}">[ REWIND ]</button>
       <button id="btn-restart" class="action-btn">[ RESTART ]</button>
+      <button id="btn-menu" class="action-btn">[ MENU ]</button>
     </div>
   `;
   appEl.appendChild(gameOverOverlay);
 
   const btnRewind = gameOverOverlay.querySelector<HTMLButtonElement>('#btn-rewind')!;
   const btnRestart = gameOverOverlay.querySelector<HTMLButtonElement>('#btn-restart')!;
+  const btnMenu = gameOverOverlay.querySelector<HTMLButtonElement>('#btn-menu')!;
 
-  btnRewind.addEventListener('touchstart', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
-  btnRewind.addEventListener('mousedown', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
-  btnRewind.addEventListener('touchend', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
-  btnRewind.addEventListener('mouseup', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
-  btnRewind.addEventListener('touchcancel', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
+  btnRewind.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); input.triggerRewindStart(); });
+  btnRewind.addEventListener('pointerup', (e) => { e.stopPropagation(); e.preventDefault(); input.triggerRewindEnd(); });
+  btnRewind.addEventListener('pointercancel', (e) => { e.stopPropagation(); e.preventDefault(); input.triggerRewindEnd(); });
 
-  btnRestart.addEventListener('click', (e) => { e.stopPropagation(); input.triggerRestart(); });
-  btnRestart.addEventListener('touchend', (e) => { e.stopPropagation(); input.triggerRestart(); });
+  btnRestart.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); input.triggerRestart(); });
+
+  btnMenu.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    hideGameOver();
+    engine.setPaused(true);
+    state.setStatus(GameStatus.MENU);
+    menuLanding.classList.remove('hidden');
+    menuOverlay.classList.remove('hidden');
+    menuOverlay.style.opacity = '1';
+    menuOverlay.style.transform = 'scale(1) translateY(0)';
+    document.body.classList.add('menu-active');
+  });
 }
 
 function hideGameOver() {
@@ -478,8 +490,9 @@ window.addEventListener('biome-warning', (_e: any) => {
   triggerHaptic('warning');
 });
 
-hudAiBtn.addEventListener('click', (e) => {
+hudAiBtn.addEventListener('pointerdown', (e) => {
   e.stopPropagation();
+  e.preventDefault();
   const s = state.getState();
   if (GAME_CONFIG.autopilotEnabled) {
     const newAuto = !s.isAutopilot;
@@ -488,13 +501,10 @@ hudAiBtn.addEventListener('click', (e) => {
     if (GAME_CONFIG.audioEnabled) audio.playTurn();
   } else { showToast("[ SYSTEM: AUTOPILOT_LOCKED ]"); }
 });
-hudAiBtn.addEventListener('touchend', (e) => { e.stopPropagation(); });
 
-hudRewindBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
-hudRewindBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); input.triggerRewindStart(); });
-hudRewindBtn.addEventListener('touchend', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
-hudRewindBtn.addEventListener('mouseup', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
-hudRewindBtn.addEventListener('touchcancel', (e) => { e.stopPropagation(); input.triggerRewindEnd(); });
+hudRewindBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); input.triggerRewindStart(); });
+hudRewindBtn.addEventListener('pointerup', (e) => { e.stopPropagation(); e.preventDefault(); input.triggerRewindEnd(); });
+hudRewindBtn.addEventListener('pointercancel', (e) => { e.stopPropagation(); e.preventDefault(); input.triggerRewindEnd(); });
 
 document.addEventListener('click', () => {
   if (state.getState().status === GameStatus.PLAYING) { window.focus(); }
