@@ -154,15 +154,10 @@ async function triggerHaptic(type: 'turn' | 'eat' | 'death' | 'warning') {
 if (Capacitor.isNativePlatform()) {
   App.addListener('backButton', () => {
     const s = state.getState();
-    if (s.status === GameStatus.PLAYING) {
-      // If in game, open config
-      menuLanding.classList.add('hidden');
-      menuConfig.classList.remove('hidden');
-      menuOverlay.classList.remove('hidden');
-      menuOverlay.style.opacity = '1';
-      menuOverlay.style.transform = 'scale(1) translateY(0)';
-      document.body.classList.add('menu-active');
-      engine.setPaused(true);
+    if (s.status === GameStatus.PLAYING || s.status === GameStatus.GAME_OVER) {
+      // Completely disable/ignore back button gestures during gameplay and game over
+      // to prevent accidental edge swipes from trapping the user in menus.
+      return;
     } else if (s.status === GameStatus.MENU || s.status === GameStatus.BOOT) {
       App.exitApp();
     } else {
