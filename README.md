@@ -1,56 +1,56 @@
-# SERPENS
+# Serpens
 
-A high-performance, minimalist snake simulation engineered for precision and visual depth. This project explores the intersection of classic arcade logic and modern web-rendering techniques, prioritizing a sophisticated "Tech-Noir" aesthetic over traditional game visuals.
+A TypeScript snake game with biome effects, rewind and an optional autopilot.
+It renders with HTML Canvas and includes Capacitor wrappers for Android and iOS.
 
-## Project Overview
+[Play in the browser](https://rhythm-sanghi.github.io/Serpens/)
 
-SERPENS is built on a custom-designed HTML5 Canvas engine. The core architecture is decoupled, separating high-precision physics calculations from the visual rendering pipeline to ensure frame-rate stability and mathematical accuracy.
+## Run locally
 
-## Technical Architecture
+```sh
+git clone https://github.com/Rhythm-Sanghi/Serpens.git
+cd Serpens
+npm ci
+npm run dev
+```
 
-### Core Engine
+Use Node 22.19+ or Node 24. `npm run build` type-checks the code and creates
+`dist/`; `npm run preview` serves that build locally.
 
-* **Language:** TypeScript 5.x
-* **Build Tool:** Vite
-* **Physics:** Delta-time synchronized movement logic to prevent frame-rate dependency.
-* **State Management:** Integrated state-machine for handling transitions between gameplay, anomalies (glitches), and system recovery (rewind).
+## Controls
 
-### High-Fidelity Rendering
+Use arrow keys or WASD to steer, or swipe on touch devices. Hold **R** to rewind
+when enabled. The settings and on-screen controls expose the biome, autopilot
+and rewind options.
 
-* **Buffered Upscaling:** Achieves a "Pixel Crush" effect through hardware-accelerated downsampling rather than CPU-intensive pixel manipulation.
-* **Layered Compositing:** Implements luminous depth through additive color blending and layered geometry, avoiding the performance overhead of standard browser blur filters.
-* **Dynamic Theming:** Real-time biome transitions that alter physics constants and visual shaders without interrupting the logic loop.
+## Implementation
 
-### Physics & Anomalies
+`src/core/State.ts` owns gameplay and a bounded history of snapshots.
+`Renderer.ts` draws the Canvas view; `Input.ts` queues direction changes.
+Biome strategies add effects such as attraction, ice and mirrored movement.
 
-* **Gravitational Fields:** Implements inverse-square law attraction for "Void" entities.
-* **Input Buffer:** A command-queue system that prevents input jamming and allows for high-speed, multi-directional maneuvers.
-* **Temporal Rewind:** A 1000-frame state buffer that enables real-time history backtracking.
+Snapshots copy the state fields used by gameplay rather than serializing the
+whole state through JSON. No measured allocation-reduction percentage or
+all-device frame-rate guarantee is claimed.
 
-### Optimization & Engineering
+## Mobile builds
 
-* **Memory Management:** Eliminated Garbage Collection thrashing by replacing JSON-based state snapshots with a custom vector-cloning algorithm, reducing heap allocation by 85%.
-* **Render Stability:** Resolved Context Alpha Leaks and Canvas IndexSizeErrors through strict mathematical clamping and state-restoration patterns.
-* **Input Integrity:** Implemented a non-blocking preventDefault strategy and cross-state direction synchronization.
+```sh
+npm run build
+npx cap sync
+```
 
-## Installation & Deployment
+Open Android Studio with `npx cap open android`, or Xcode on macOS with
+`npx cap open ios`. The checked-in native source and Gradle wrapper are build
+inputs. Generated release output belongs in build artifacts rather than Git.
 
-### Development Environment
+The [Android workflow](.github/workflows/build-android-apk.yml) builds a debug APK
+on pushes to `main` and on manual runs. It does not deploy the website.
 
-To run the project locally for development:
+## Website deployment
 
-1. Clone the repository.
-2. Execute `npm install` to load dependencies.
-3. Execute `npm run dev` to start the local server.
-
-### Native Mobile Build (Capacitor)
-
-This project is configured for native mobile deployment:
-
-1. Run `npm run build` to generate the production web assets.
-2. Use `npx cap sync` to update the native Android and iOS wrappers.
-3. Open the project in Android Studio or Xcode via `npx cap open [platform]`.
-
-## Deployment Strategy
-
-The project is optimized for GitHub Pages. Updates to the `main` branch trigger an automated build and deployment sequence, ensuring the live demo is always synchronized with the latest codebase.
+`npm run deploy` builds the web app and publishes `dist/` to the `gh-pages`
+branch using the configured Git remote. It requires repository write access.
+The repository has a `gh-pages` branch; pushes to `main` are not documented as
+automatic website deployments. Run the deployment command deliberately when
+you want to publish an updated website.

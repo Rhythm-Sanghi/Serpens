@@ -1,6 +1,6 @@
 {
   "name": "serpens",
-  "description": "A sophisticated minimalist snake simulation built with TypeScript and HTML5 Canvas.",
+  "description": "A TypeScript snake game with biome effects, rewind and mobile wrappers.",
   "repository": {
     "type": "git",
     "url": "https://github.com/Rhythm-Sanghi/Serpens"
