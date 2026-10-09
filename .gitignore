@@ -35,3 +35,4 @@ desktop.ini
 /keystore
 .env
 .env*.local
+/android/app/release/
